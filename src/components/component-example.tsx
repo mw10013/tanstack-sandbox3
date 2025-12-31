@@ -265,10 +265,10 @@ function FormExample() {
                   <DropdownMenuCheckboxItem
                     checked={notifications.email}
                     onCheckedChange={(checked) =>
-                      setNotifications({
+                      { setNotifications({
                         ...notifications,
-                        email: checked === true,
-                      })
+                        email: checked,
+                      }); }
                     }
                   >
                     <EyeIcon />
@@ -277,10 +277,10 @@ function FormExample() {
                   <DropdownMenuCheckboxItem
                     checked={notifications.sms}
                     onCheckedChange={(checked) =>
-                      setNotifications({
+                      { setNotifications({
                         ...notifications,
-                        sms: checked === true,
-                      })
+                        sms: checked,
+                      }); }
                     }
                   >
                     <LayoutIcon />
@@ -360,10 +360,10 @@ function FormExample() {
                                   <DropdownMenuCheckboxItem
                                     checked={notifications.push}
                                     onCheckedChange={(checked) =>
-                                      setNotifications({
+                                      { setNotifications({
                                         ...notifications,
-                                        push: checked === true,
-                                      })
+                                        push: checked,
+                                      }); }
                                     }
                                   >
                                     <BellIcon />
@@ -372,10 +372,10 @@ function FormExample() {
                                   <DropdownMenuCheckboxItem
                                     checked={notifications.email}
                                     onCheckedChange={(checked) =>
-                                      setNotifications({
+                                      { setNotifications({
                                         ...notifications,
-                                        email: checked === true,
-                                      })
+                                        email: checked,
+                                      }); }
                                     }
                                   >
                                     <MailIcon />
@@ -464,6 +464,7 @@ function FormExample() {
                     <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
                     <ComboboxList>
                       {(item) => (
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                         <ComboboxItem key={item} value={item}>
                           {item}
                         </ComboboxItem>

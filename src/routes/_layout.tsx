@@ -41,14 +41,12 @@ function Layout() {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion
                       isActive={Boolean(matchRoute({ to: '/example' }))}
                       render={<Link to="/example">Example</Link>}
                     />
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion
                       isActive={Boolean(matchRoute({ to: '/form3' }))}
                       render={<Link to="/form3">Form 3</Link>}
                     />
