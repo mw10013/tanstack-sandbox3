@@ -9,7 +9,15 @@
 		"test": "vitest run",
 		"deploy": "pnpm run build && wrangler deploy",
 		"preview": "pnpm run build && vite preview",
-		"cf-typegen": "wrangler types"
+		"cf-typegen": "wrangler types",
+		"clean": "pnpm clean:node && pnpm clean:wrangler && pnpm clean:etc",
+		"clean:node": "rm -rf node_modules",
+		"clean:wrangler": "rm -rf .wrangler",
+		"clean:etc": "rm -rf .react-router build dist",
+		"typecheck": "npm run cf-typegen && tsc -b",
+		"lint": "eslint .",
+		"refs:shadcn": "rm -rf refs/shadcn && mkdir -p refs/shadcn && curl -L https://github.com/shadcn-ui/ui/archive/refs/tags/shadcn@3.6.2.tar.gz | tar -xz -C refs/shadcn --strip-components=1",
+		"refs:tan-form": "rm -rf refs/tan-form && mkdir -p refs/tan-form && curl -L https://github.com/TanStack/form/archive/refs/tags/@tanstack/react-form@1.27.6.tar.gz | tar -xz -C refs/tan-form --strip-components=1"
 	},
 	"dependencies": {
 		"@base-ui/react": "1.0.0",
