@@ -7,9 +7,28 @@
   "name": "tanstack-sandbox3",
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
+  "account_id": "1422451be59cc2401532ad67d92ae773",
   "main": "@tanstack/react-start/server-entry",
   "observability": {
     "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "D1",
+      "database_name": "d1-local",
+      "database_id": "d1-local"
+    }
+  ],
+  "env": {
+    "production": {
+      "d1_databases": [
+        {
+          "binding": "D1",
+          "database_name": "tanstack-sandbox3-d1-production",
+          "database_id": ""
+        }
+      ]
+    }
   }
   /**
    * Smart Placement
