@@ -1,21 +1,21 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { createFileRoute } from "@tanstack/react-router";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card'
+} from "@/components/ui/card";
 
-export const Route = createFileRoute('/')({ component: RouteComponent })
+export const Route = createFileRoute("/")({ component: RouteComponent });
 
 function RouteComponent() {
   return (
-    <div className="min-h-screen bg-background p-8">
-      <h1 className="text-3xl font-bold mb-8">tanstack-sandbox3</h1>
+    <div className="bg-background min-h-screen p-8">
+      <h1 className="mb-8 text-3xl font-bold">tanstack-sandbox3</h1>
 
       <Card className="max-w-md">
         <CardHeader>
@@ -35,5 +35,5 @@ function RouteComponent() {
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }
