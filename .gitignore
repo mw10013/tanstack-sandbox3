@@ -12,6 +12,7 @@ count.txt
 .vinxi
 todos.json
 refs/
+*.tsbuildinfo
 
 .dev.vars*
 !.dev.vars.example
