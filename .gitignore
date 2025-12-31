@@ -11,6 +11,7 @@ count.txt
 .output
 .vinxi
 todos.json
+refs/
 
 .dev.vars*
 !.dev.vars.example
