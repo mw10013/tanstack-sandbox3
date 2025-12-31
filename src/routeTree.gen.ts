@@ -9,50 +9,115 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as LayoutRouteImport } from './routes/_layout'
+import { Route as LayoutIndexRouteImport } from './routes/_layout.index'
+import { Route as LayoutForm3RouteImport } from './routes/_layout.form3'
+import { Route as LayoutExampleRouteImport } from './routes/_layout.example'
 
-const IndexRoute = IndexRouteImport.update({
+const LayoutRoute = LayoutRouteImport.update({
+  id: '/_layout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LayoutIndexRoute = LayoutIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutForm3Route = LayoutForm3RouteImport.update({
+  id: '/form3',
+  path: '/form3',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutExampleRoute = LayoutExampleRouteImport.update({
+  id: '/example',
+  path: '/example',
+  getParentRoute: () => LayoutRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/example': typeof LayoutExampleRoute
+  '/form3': typeof LayoutForm3Route
+  '/': typeof LayoutIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/example': typeof LayoutExampleRoute
+  '/form3': typeof LayoutForm3Route
+  '/': typeof LayoutIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_layout': typeof LayoutRouteWithChildren
+  '/_layout/example': typeof LayoutExampleRoute
+  '/_layout/form3': typeof LayoutForm3Route
+  '/_layout/': typeof LayoutIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/example' | '/form3' | '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/example' | '/form3' | '/'
+  id:
+    | '__root__'
+    | '/_layout'
+    | '/_layout/example'
+    | '/_layout/form3'
+    | '/_layout/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  LayoutRoute: typeof LayoutRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_layout': {
+      id: '/_layout'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof LayoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_layout/': {
+      id: '/_layout/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof LayoutIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/form3': {
+      id: '/_layout/form3'
+      path: '/form3'
+      fullPath: '/form3'
+      preLoaderRoute: typeof LayoutForm3RouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/example': {
+      id: '/_layout/example'
+      path: '/example'
+      fullPath: '/example'
+      preLoaderRoute: typeof LayoutExampleRouteImport
+      parentRoute: typeof LayoutRoute
     }
   }
 }
 
+interface LayoutRouteChildren {
+  LayoutExampleRoute: typeof LayoutExampleRoute
+  LayoutForm3Route: typeof LayoutForm3Route
+  LayoutIndexRoute: typeof LayoutIndexRoute
+}
+
+const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutExampleRoute: LayoutExampleRoute,
+  LayoutForm3Route: LayoutForm3Route,
+  LayoutIndexRoute: LayoutIndexRoute,
+}
+
+const LayoutRouteWithChildren =
+  LayoutRoute._addFileChildren(LayoutRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  LayoutRoute: LayoutRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
