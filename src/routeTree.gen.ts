@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout.index'
+import { Route as LayoutUsersRouteImport } from './routes/_layout.users'
 import { Route as LayoutForm3RouteImport } from './routes/_layout.form3'
 import { Route as LayoutExampleRouteImport } from './routes/_layout.example'
 
@@ -21,6 +22,11 @@ const LayoutRoute = LayoutRouteImport.update({
 const LayoutIndexRoute = LayoutIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutUsersRoute = LayoutUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutForm3Route = LayoutForm3RouteImport.update({
@@ -37,11 +43,13 @@ const LayoutExampleRoute = LayoutExampleRouteImport.update({
 export interface FileRoutesByFullPath {
   '/example': typeof LayoutExampleRoute
   '/form3': typeof LayoutForm3Route
+  '/users': typeof LayoutUsersRoute
   '/': typeof LayoutIndexRoute
 }
 export interface FileRoutesByTo {
   '/example': typeof LayoutExampleRoute
   '/form3': typeof LayoutForm3Route
+  '/users': typeof LayoutUsersRoute
   '/': typeof LayoutIndexRoute
 }
 export interface FileRoutesById {
@@ -49,18 +57,20 @@ export interface FileRoutesById {
   '/_layout': typeof LayoutRouteWithChildren
   '/_layout/example': typeof LayoutExampleRoute
   '/_layout/form3': typeof LayoutForm3Route
+  '/_layout/users': typeof LayoutUsersRoute
   '/_layout/': typeof LayoutIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/example' | '/form3' | '/'
+  fullPaths: '/example' | '/form3' | '/users' | '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/example' | '/form3' | '/'
+  to: '/example' | '/form3' | '/users' | '/'
   id:
     | '__root__'
     | '/_layout'
     | '/_layout/example'
     | '/_layout/form3'
+    | '/_layout/users'
     | '/_layout/'
   fileRoutesById: FileRoutesById
 }
@@ -84,6 +94,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/users': {
+      id: '/_layout/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof LayoutUsersRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/form3': {
       id: '/_layout/form3'
       path: '/form3'
@@ -104,12 +121,14 @@ declare module '@tanstack/react-router' {
 interface LayoutRouteChildren {
   LayoutExampleRoute: typeof LayoutExampleRoute
   LayoutForm3Route: typeof LayoutForm3Route
+  LayoutUsersRoute: typeof LayoutUsersRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutExampleRoute: LayoutExampleRoute,
   LayoutForm3Route: LayoutForm3Route,
+  LayoutUsersRoute: LayoutUsersRoute,
   LayoutIndexRoute: LayoutIndexRoute,
 }
 

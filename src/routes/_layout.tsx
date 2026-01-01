@@ -32,26 +32,32 @@ function Layout() {
             <SidebarGroup>
               <SidebarGroupLabel>Navigation</SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={Boolean(matchRoute({ to: '/' }))}
-                      render={<Link to="/">Home</Link>}
-                    />
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={Boolean(matchRoute({ to: '/example' }))}
-                      render={<Link to="/example">Example</Link>}
-                    />
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={Boolean(matchRoute({ to: '/form3' }))}
-                      render={<Link to="/form3">Form 3</Link>}
-                    />
-                  </SidebarMenuItem>
-                </SidebarMenu>
+                 <SidebarMenu>
+                   <SidebarMenuItem>
+                     <SidebarMenuButton
+                       isActive={Boolean(matchRoute({ to: '/' }))}
+                       render={<Link to="/">Home</Link>}
+                     />
+                   </SidebarMenuItem>
+                   <SidebarMenuItem>
+                     <SidebarMenuButton
+                       isActive={Boolean(matchRoute({ to: '/users' }))}
+                       render={<Link to="/users">Users</Link>}
+                     />
+                   </SidebarMenuItem>
+                   <SidebarMenuItem>
+                     <SidebarMenuButton
+                       isActive={Boolean(matchRoute({ to: '/example' }))}
+                       render={<Link to="/example">Example</Link>}
+                     />
+                   </SidebarMenuItem>
+                   <SidebarMenuItem>
+                     <SidebarMenuButton
+                       isActive={Boolean(matchRoute({ to: '/form3' }))}
+                       render={<Link to="/form3">Form 3</Link>}
+                     />
+                   </SidebarMenuItem>
+                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
