@@ -17,7 +17,9 @@
 - **TanStack Form**: `refs/tan-form/docs/` (Markdown files)
 - **Shadcn UI**: `refs/shadcn/apps/v4/content/docs/` (MDX files)
 - **Base UI**: `refs/base-ui/docs/src/app/(docs)/(content)/react/` (MDX files in subdirs)
-- **TanStack Router**: `refs/tanstack-router/docs/` (Markdown files)
+- **Better Auth**: `refs/better-auth/docs/content/docs/` (MDX files - plugins, integrations, adapters, guides, concepts, authentication, reference)
+- **TanStack Start**: `refs/tan-start/docs/` (MDX files - start/framework/react, start/framework/solid)
+- **TanStack Router**: `refs/tan-router/docs/` (MDX files - router/framework/react, router/framework/solid)
 
 ## Build/Lint/Test Commands
 

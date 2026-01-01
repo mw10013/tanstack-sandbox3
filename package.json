@@ -30,7 +30,8 @@
     "refs:base-ui": "rm -rf refs/base-ui && mkdir -p refs/base-ui && curl -L https://github.com/mui/base-ui/archive/refs/tags/v1.0.0.tar.gz | tar -xz -C refs/base-ui --strip-components=1",
     "refs:tan-router": "rm -rf refs/tan-router && mkdir -p refs/tan-router && curl -L https://github.com/TanStack/router/archive/refs/tags/v1.144.0.tar.gz | tar -xz -C refs/tan-router --strip-components=1",
     "refs:tan-start": "rm -rf refs/tan-start && mkdir -p refs/tan-start && curl -L https://github.com/TanStack/router/archive/refs/tags/v1.144.0.tar.gz | tar -xz -C refs/tan-start --strip-components=1",
-    "refs:crrbuis": "rm -rf refs/crrbuis && mkdir -p refs/crrbuis && curl -L https://github.com/mw10013/cloudflare-react-router-bui-saas/archive/refs/heads/main.tar.gz | tar -xz -C refs/crrbuis --strip-components=1"
+    "refs:crrbuis": "rm -rf refs/crrbuis && mkdir -p refs/crrbuis && curl -L https://github.com/mw10013/cloudflare-react-router-bui-saas/archive/refs/heads/main.tar.gz | tar -xz -C refs/crrbuis --strip-components=1",
+    "refs:better-auth": "rm -rf refs/better-auth && mkdir -p refs/better-auth && curl -L https://github.com/better-auth/better-auth/archive/refs/tags/v1.3.32.tar.gz | tar -xz -C refs/better-auth --strip-components=1"
   },
   "dependencies": {
     "@base-ui/react": "1.0.0",
