@@ -9,6 +9,12 @@
   "compatibility_flags": ["nodejs_compat"],
   "account_id": "1422451be59cc2401532ad67d92ae773",
   "main": "@tanstack/react-start/server-entry",
+  "vars": {
+    "ENVIRONMENT": "local",
+    "DEMO_MODE": "true",
+    "TRANSACTIONAL_EMAIL": "noreply@example.com",
+    "BETTER_AUTH_URL": "http://localhost:3000"
+  },
   "observability": {
     "enabled": true
   },
@@ -19,13 +25,31 @@
       "database_id": "d1-local"
     }
   ],
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "kv-local"
+    }
+  ],
   "env": {
     "production": {
+      "vars": {
+        "ENVIRONMENT": "production",
+        "DEMO_MODE": "false",
+        "TRANSACTIONAL_EMAIL": "noreply@example.com",
+        "BETTER_AUTH_URL": "https://tanstack-sandbox3.workers.dev"
+      },
       "d1_databases": [
         {
           "binding": "D1",
           "database_name": "tanstack-sandbox3-d1-production",
           "database_id": ""
+        }
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "KV",
+          "id": ""
         }
       ]
     }
