@@ -11,6 +11,7 @@
 - **Stack**: React 19, TanStack Router/Start, Base UI, Tailwind CSS v4, Vitest, ESLint, Prettier, pnpm
 - **Refs**: Downloaded source code of libraries are in `refs/` for reference.
   - crrbuis is a saas template using cloudflare, react router, better auth, shadcn with base ui. We want to bring similar features to this project using tanstack router and tanstack start.
+  - saas-kit is a template using cloudflare, tanstack start, and better auth. Use as a reference for similar features, setup and config.
 
 ### Reference Docs Locations
 
