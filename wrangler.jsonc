@@ -8,7 +8,7 @@
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
   "account_id": "1422451be59cc2401532ad67d92ae773",
-  "main": "@tanstack/react-start/server-entry",
+  "main": "./src/worker.ts",
   "vars": {
     "ENVIRONMENT": "local",
     "DEMO_MODE": "true",
