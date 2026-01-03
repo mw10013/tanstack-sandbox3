@@ -10,7 +10,7 @@ const getUsers = createServerFn({ method: "GET" }).handler(
   },
 );
 
-export const Route = createFileRoute("/_layout/users")({
+export const Route = createFileRoute("/sandbox/users")({
   loader: () => getUsers(),
   component: Users,
 });

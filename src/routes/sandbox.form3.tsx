@@ -54,7 +54,7 @@ export const action = createServerFn({
     return { success: true, data: parseResult.data }
   })
 
-export const Route = createFileRoute('/_layout/form3')({
+export const Route = createFileRoute('/sandbox/form3')({
   component: RouteComponent,
 })
 
