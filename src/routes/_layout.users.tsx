@@ -1,18 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { env } from "cloudflare:workers";
-import { createRepository } from "@/lib/repository";
 
-const getUsers = createServerFn({ method: "GET" }).handler(async () => {
-  const repository = createRepository({
-    db: env.D1,
-  });
-
-  return await repository.getUsers({
-    limit: 10,
-    offset: 0,
-  });
-});
+const getUsers = createServerFn({ method: "GET" }).handler(
+  async ({ context }) => {
+    return await context.repository.getUsers({
+      limit: 10,
+      offset: 0,
+    });
+  },
+);
 
 export const Route = createFileRoute("/_layout/users")({
   loader: () => getUsers(),
