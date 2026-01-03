@@ -1,6 +1,5 @@
 import type { Repository } from "@/lib/repository";
-import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
-import { env } from "cloudflare:workers";
+import serverEntry from "@tanstack/react-start/server-entry";
 import { createRepository } from "@/lib/repository";
 
 interface ServerContext {
@@ -14,14 +13,14 @@ declare module "@tanstack/react-start" {
   }
 }
 
-export default createServerEntry({
-  fetch: async (request: Request) => {
+export default {
+  async fetch(request, env, _ctx) {
     console.log("worker.ts: fetch", request.url);
-    return handler.fetch(request, {
+    return serverEntry.fetch(request, {
       context: {
         env,
         repository: createRepository({ db: env.D1 }),
       },
     });
   },
-} satisfies { fetch: (request: Request) => Promise<Response> });
+} satisfies ExportedHandler<Env>;
