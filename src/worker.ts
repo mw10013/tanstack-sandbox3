@@ -6,11 +6,31 @@ import { createAuthService } from "@/lib/auth-service";
 import { createRepository } from "@/lib/repository";
 import { createStripeService } from "@/lib/stripe-service";
 
-interface ServerContext {
+export interface ServerContext {
   env: Env;
   repository: Repository;
   authService: AuthService;
   stripeService: StripeService;
+  session?: {
+    user: {
+      id: string;
+      email: string;
+      name?: string;
+      image?: string | null;
+      emailVerified: boolean;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+    session: {
+      id: string;
+      userId: string;
+      expiresAt: Date;
+      token: string;
+      ipAddress?: string | null;
+      userAgent?: string | null;
+      activeOrganizationId?: number | null;
+    };
+  } | null;
 }
 
 declare module "@tanstack/react-start" {
