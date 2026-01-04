@@ -1,49 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
 import { siGithub } from "simple-icons";
 import { Button } from "@/components/ui/button";
 
-// interface SessionUser {
-//   id: string;
-//   email: string;
-//   name: string;
-//   role: string;
-// }
+const getLoaderData = createServerFn().handler(({ context: { session } }) => {
+  if (session?.user) {
+    return {
+      sessionUser: {
+        userId: session.user.id,
+        email: session.user.email,
+        role: session.user.role,
+      },
+    };
+  }
 
-// interface SessionData {
-//   isSignedIn: boolean;
-//   sessionUser: SessionUser | null;
-// }
-
-// const getSessionData = createServerFn({ method: "GET" }).handler(
-//   async (): Promise<SessionData> => {
-//     try {
-//       const request = getRequest();
-//       const authService = (
-//         globalThis as unknown as { authService: AuthService }
-//       ).authService;
-//       const result = (await authService.api.getSession({
-//         headers: request.headers,
-//       })) as {
-//         session?: { userId: string };
-//         user?: SessionUser;
-//       };
-//       if (!result.session || !result.user) {
-//         return { isSignedIn: false, sessionUser: null };
-//       }
-//       return { isSignedIn: true, sessionUser: result.user };
-//     } catch {
-//       return { isSignedIn: false, sessionUser: null };
-//     }
-//   },
-// );
+  return {};
+});
 
 export const Route = createFileRoute("/_mkt/_index")({
-  // loader: () => getSessionData(),
+  loader: () => getLoaderData(),
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  // const parentLoaderData = Route.useLoaderData();
+  const loaderData = Route.useLoaderData();
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center py-12">
@@ -66,16 +46,14 @@ function RouteComponent() {
           and edge infrastructure.
         </p>
         <div className="mt-6 flex w-fit gap-4">
-          {/* {parentLoaderData.sessionUser ? (
+          {loaderData.sessionUser ? (
             <Button
               variant="default"
               className="h-11 rounded-full! px-6 text-base! font-medium"
               render={
                 <a
                   href={
-                    parentLoaderData.sessionUser.role === "admin"
-                      ? "/admin"
-                      : "/app"
+                    loaderData.sessionUser.role === "admin" ? "/admin" : "/app"
                   }
                 />
               }
@@ -90,7 +68,7 @@ function RouteComponent() {
             >
               Get Started
             </Button>
-          )} */}
+          )}
           <Button
             variant="outline"
             render={
