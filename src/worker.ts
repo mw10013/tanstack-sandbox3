@@ -11,26 +11,7 @@ export interface ServerContext {
   repository: Repository;
   authService: AuthService;
   stripeService: StripeService;
-  session?: {
-    user: {
-      id: string;
-      email: string;
-      name?: string;
-      image?: string | null;
-      emailVerified: boolean;
-      createdAt: Date;
-      updatedAt: Date;
-    };
-    session: {
-      id: string;
-      userId: string;
-      expiresAt: Date;
-      token: string;
-      ipAddress?: string | null;
-      userAgent?: string | null;
-      activeOrganizationId?: number | null;
-    };
-  } | null;
+  session?: AuthService["$Infer"]["Session"];
 }
 
 declare module "@tanstack/react-start" {
@@ -53,12 +34,16 @@ export default {
       demoMode: env.DEMO_MODE === "true",
       transactionalEmail: env.TRANSACTIONAL_EMAIL,
     });
+    const session = await authService.api.getSession({
+      headers: request.headers,
+    });
     return serverEntry.fetch(request, {
       context: {
         env,
         repository,
         authService,
         stripeService,
+        session: session ?? undefined,
       },
     });
   },
