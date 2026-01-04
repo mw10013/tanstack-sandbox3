@@ -1,57 +1,35 @@
 # AGENTS.md
 
-- You are a senior TypeScript functional programmer with deep expertise in TanStack Router/Start, Cloudflare Workers with Vite, Shadcn UI with Base UI, and Tailwind CSS 4.0.
+- You are a senior TypeScript functional programmer with deep expertise in TanStack Start and Router, Cloudflare Workers with Vite, Shadcn UI with Base UI, and Tailwind CSS 4.0.
 - Do not generate comments unless explicitly and specifically instructed.
 - Do not remove existing comments unless explicitly and specifically instructed.
 
 ## Project
 
-- `tanstack-sandbox3` is a TanStack Router + TanStack Start application with shadcn/ui components (Base UI variant), TypeScript, Tailwind CSS v4, and Cloudflare Workers deployment.
-- TanStack Router route modules are in `src/routes/` and use file route conventions.
-- **Stack**: React 19, TanStack Router/Start, Base UI, Tailwind CSS v4, Vitest, ESLint, Prettier, pnpm
+- `tanstack-sandbox3` is a TanStack Start application with shadcn/ui components (Base UI variant), TypeScript, Tailwind CSS v4, and Cloudflare Workers deployment.
+- Route modules are in `src/routes/` and use file route conventions.
 - **Refs**: Downloaded source code of libraries are in `refs/` for reference.
   - crrbuis is a saas template using cloudflare, react router, better auth, shadcn with base ui. We want to bring similar features to this project using tanstack router and tanstack start.
   - saas-kit is a template using cloudflare, tanstack start, and better auth. Use as a reference for similar features, setup and config.
 
 ### Reference Docs Locations
 
+- **TanStack Start**: `refs/tan-start/docs/` (MDX files - start/framework/react)
+- **TanStack Router**: `refs/tan-router/docs/` (MDX files - router/framework/react)
 - **TanStack Form**: `refs/tan-form/docs/` (Markdown files)
 - **Shadcn UI**: `refs/shadcn/apps/v4/content/docs/` (MDX files)
 - **Base UI**: `refs/base-ui/docs/src/app/(docs)/(content)/react/` (MDX files in subdirs)
 - **Better Auth**: `refs/better-auth/docs/content/docs/` (MDX files - plugins, integrations, adapters, guides, concepts, authentication, reference)
-- **TanStack Start**: `refs/tan-start/docs/` (MDX files - start/framework/react, start/framework/solid)
-- **TanStack Router**: `refs/tan-router/docs/` (MDX files - router/framework/react, router/framework/solid)
 
-## Build/Lint/Test Commands
+## Commands
 
-### Development
 ```bash
 pnpm dev                # Start dev server on port 3000
-pnpm build              # Production build
-pnpm serve              # Preview production build
-pnpm preview            # Build and preview
-```
-
-### Testing
-```bash
-pnpm test               # Run all tests with Vitest
-# Note: No test files exist yet. Create tests as *.test.ts or *.test.tsx
-# For single test file: pnpm test path/to/file.test.tsx
-# For watch mode: pnpm vitest (or add script: "test:watch": "vitest")
-```
-
-### Code Quality
-```bash
-pnpm lint               # Run ESLint
 pnpm typecheck          # TypeScript type checking (includes wrangler types generation)
-pnpm format             # Format code with Prettier
-pnpm format:check       # Check formatting without writing
+pnpm lint               # Run ESLint
+pnpm test               # Run all tests with Vitest. We only have d1-adapter tests so not that useful yet.
 ```
-
-### Deployment
-```bash
-pnpm cf-typegen         # Generate Cloudflare Worker types
-```
+- Run typecheck and lint after generating code.
 
 ## TypeScript Guidelines
 
@@ -83,8 +61,10 @@ import * as z from "zod";
 - Use lowercase for all sql keywords.
 - Use positional parameter placeholders.
 
-### Type generation for Cloudflare
-Run `pnpm cf-typegen` to regenerate `worker-configuration.d.ts` after changing wrangler.jsonc bindings.
+## TanStack
+
+- TanStack typing is world-class. You should not need to type cast and should let typescript infer types wherever possible.
+- Start loaders are isomophic so generally create a server fn with server logic and call it from loader.
 
 ## Do Not Edit
 

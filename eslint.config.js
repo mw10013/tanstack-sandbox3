@@ -1,4 +1,5 @@
 import eslint from "@eslint/js";
+import pluginRouter from "@tanstack/eslint-plugin-router";
 import reactPlugin from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import { defineConfig, globalIgnores } from "eslint/config";
@@ -24,6 +25,7 @@ export default defineConfig(
   eslint.configs.recommended,
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
+  ...pluginRouter.configs["flat/recommended"],
   {
     languageOptions: {
       parserOptions: {
