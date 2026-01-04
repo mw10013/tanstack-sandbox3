@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "rm -rf node_modules/.vite && vite dev --port 3000",
+    "dev": "vite dev --force --port 3000",
     "build": "vite build",
     "serve": "vite preview",
     "test": "vitest run",

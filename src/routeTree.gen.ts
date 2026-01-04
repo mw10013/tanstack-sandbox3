@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SandboxRouteImport } from './routes/sandbox'
+import { Route as MktRouteImport } from './routes/_mkt'
+import { Route as MktIndexRouteImport } from './routes/_mkt._index'
 import { Route as SandboxIndexRouteImport } from './routes/sandbox.index'
 import { Route as SandboxUsersRouteImport } from './routes/sandbox.users'
 import { Route as SandboxForm3RouteImport } from './routes/sandbox.form3'
@@ -19,6 +21,14 @@ const SandboxRoute = SandboxRouteImport.update({
   id: '/sandbox',
   path: '/sandbox',
   getParentRoute: () => rootRouteImport,
+} as any)
+const MktRoute = MktRouteImport.update({
+  id: '/_mkt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MktIndexRoute = MktIndexRouteImport.update({
+  id: '/_index',
+  getParentRoute: () => MktRoute,
 } as any)
 const SandboxIndexRoute = SandboxIndexRouteImport.update({
   id: '/',
@@ -56,7 +66,9 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_mkt': typeof MktRouteWithChildren
   '/sandbox': typeof SandboxRouteWithChildren
+  '/_mkt/_index': typeof MktIndexRoute
   '/sandbox/example': typeof SandboxExampleRoute
   '/sandbox/form3': typeof SandboxForm3Route
   '/sandbox/users': typeof SandboxUsersRoute
@@ -74,7 +86,9 @@ export interface FileRouteTypes {
   to: '/sandbox/example' | '/sandbox/form3' | '/sandbox/users' | '/sandbox'
   id:
     | '__root__'
+    | '/_mkt'
     | '/sandbox'
+    | '/_mkt/_index'
     | '/sandbox/example'
     | '/sandbox/form3'
     | '/sandbox/users'
@@ -82,6 +96,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  MktRoute: typeof MktRouteWithChildren
   SandboxRoute: typeof SandboxRouteWithChildren
 }
 
@@ -93,6 +108,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/sandbox'
       preLoaderRoute: typeof SandboxRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_mkt': {
+      id: '/_mkt'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof MktRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_mkt/_index': {
+      id: '/_mkt/_index'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof MktIndexRouteImport
+      parentRoute: typeof MktRoute
     }
     '/sandbox/': {
       id: '/sandbox/'
@@ -125,6 +154,16 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface MktRouteChildren {
+  MktIndexRoute: typeof MktIndexRoute
+}
+
+const MktRouteChildren: MktRouteChildren = {
+  MktIndexRoute: MktIndexRoute,
+}
+
+const MktRouteWithChildren = MktRoute._addFileChildren(MktRouteChildren)
+
 interface SandboxRouteChildren {
   SandboxExampleRoute: typeof SandboxExampleRoute
   SandboxForm3Route: typeof SandboxForm3Route
@@ -143,6 +182,7 @@ const SandboxRouteWithChildren =
   SandboxRoute._addFileChildren(SandboxRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  MktRoute: MktRouteWithChildren,
   SandboxRoute: SandboxRouteWithChildren,
 }
 export const routeTree = rootRouteImport
