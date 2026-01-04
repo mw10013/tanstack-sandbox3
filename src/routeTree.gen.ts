@@ -10,22 +10,41 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SandboxRouteImport } from './routes/sandbox'
+import { Route as MagicLinkRouteImport } from './routes/magic-link'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as MktRouteImport } from './routes/_mkt'
 import { Route as MktIndexRouteImport } from './routes/_mkt._index'
 import { Route as SandboxIndexRouteImport } from './routes/sandbox.index'
 import { Route as SandboxUsersRouteImport } from './routes/sandbox.users'
 import { Route as SandboxForm3RouteImport } from './routes/sandbox.form3'
 import { Route as SandboxExampleRouteImport } from './routes/sandbox.example'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const SandboxRoute = SandboxRouteImport.update({
   id: '/sandbox',
   path: '/sandbox',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MagicLinkRoute = MagicLinkRouteImport.update({
+  id: '/magic-link',
+  path: '/magic-link',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MktRoute = MktRouteImport.update({
@@ -56,65 +75,98 @@ const SandboxExampleRoute = SandboxExampleRouteImport.update({
   path: '/example',
   getParentRoute: () => SandboxRoute,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
+  '/admin': typeof AdminRoute
+  '/app': typeof AppRoute
   '/login': typeof LoginRoute
+  '/magic-link': typeof MagicLinkRoute
   '/sandbox': typeof SandboxRouteWithChildren
   '/sandbox/example': typeof SandboxExampleRoute
   '/sandbox/form3': typeof SandboxForm3Route
   '/sandbox/users': typeof SandboxUsersRoute
   '/sandbox/': typeof SandboxIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
+  '/admin': typeof AdminRoute
+  '/app': typeof AppRoute
   '/login': typeof LoginRoute
+  '/magic-link': typeof MagicLinkRoute
   '/sandbox/example': typeof SandboxExampleRoute
   '/sandbox/form3': typeof SandboxForm3Route
   '/sandbox/users': typeof SandboxUsersRoute
   '/sandbox': typeof SandboxIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_mkt': typeof MktRouteWithChildren
+  '/admin': typeof AdminRoute
+  '/app': typeof AppRoute
   '/login': typeof LoginRoute
+  '/magic-link': typeof MagicLinkRoute
   '/sandbox': typeof SandboxRouteWithChildren
   '/_mkt/_index': typeof MktIndexRoute
   '/sandbox/example': typeof SandboxExampleRoute
   '/sandbox/form3': typeof SandboxForm3Route
   '/sandbox/users': typeof SandboxUsersRoute
   '/sandbox/': typeof SandboxIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/admin'
+    | '/app'
     | '/login'
+    | '/magic-link'
     | '/sandbox'
     | '/sandbox/example'
     | '/sandbox/form3'
     | '/sandbox/users'
     | '/sandbox/'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/admin'
+    | '/app'
     | '/login'
+    | '/magic-link'
     | '/sandbox/example'
     | '/sandbox/form3'
     | '/sandbox/users'
     | '/sandbox'
+    | '/api/auth/$'
   id:
     | '__root__'
     | '/_mkt'
+    | '/admin'
+    | '/app'
     | '/login'
+    | '/magic-link'
     | '/sandbox'
     | '/_mkt/_index'
     | '/sandbox/example'
     | '/sandbox/form3'
     | '/sandbox/users'
     | '/sandbox/'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   MktRoute: typeof MktRouteWithChildren
+  AdminRoute: typeof AdminRoute
+  AppRoute: typeof AppRoute
   LoginRoute: typeof LoginRoute
+  MagicLinkRoute: typeof MagicLinkRoute
   SandboxRoute: typeof SandboxRouteWithChildren
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -126,11 +178,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SandboxRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/magic-link': {
+      id: '/magic-link'
+      path: '/magic-link'
+      fullPath: '/magic-link'
+      preLoaderRoute: typeof MagicLinkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_mkt': {
@@ -175,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SandboxExampleRouteImport
       parentRoute: typeof SandboxRoute
     }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -207,8 +287,12 @@ const SandboxRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   MktRoute: MktRouteWithChildren,
+  AdminRoute: AdminRoute,
+  AppRoute: AppRoute,
   LoginRoute: LoginRoute,
+  MagicLinkRoute: MagicLinkRoute,
   SandboxRoute: SandboxRouteWithChildren,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
