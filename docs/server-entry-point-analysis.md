@@ -20,21 +20,24 @@ The server entry point (`@tanstack/react-start/server-entry`) serves as the sing
 The server entry point is defined in `refs/tan-start/packages/react-start/src/default-entry/server.ts`:
 
 ```typescript
-import { createStartHandler, defaultStreamHandler } from '@tanstack/react-start/server'
+import {
+  createStartHandler,
+  defaultStreamHandler,
+} from "@tanstack/react-start/server";
 
-const fetch = createStartHandler(defaultStreamHandler)
+const fetch = createStartHandler(defaultStreamHandler);
 
-export type ServerEntry = { fetch: RequestHandler<Register> }
+export type ServerEntry = { fetch: RequestHandler<Register> };
 
 export function createServerEntry(entry: ServerEntry): ServerEntry {
   return {
     async fetch(...args) {
-      return await entry.fetch(...args)
-    }
-  }
+      return await entry.fetch(...args);
+    },
+  };
 }
 
-export default createServerEntry({ fetch })
+export default createServerEntry({ fetch });
 ```
 
 ### Wrangler Configuration
@@ -75,25 +78,25 @@ When handling server requests, you often need to pass data between middleware, s
 
 ```typescript
 // src/lib/server-context.ts
-import type { D1Database, KVNamespace } from '@cloudflare/workers-types'
+import type { D1Database, KVNamespace } from "@cloudflare/workers-types";
 
 export interface ServerContext {
   env: {
-    D1: D1Database
-    KV: KVNamespace
-  }
-  db: D1Database
+    D1: D1Database;
+    KV: KVNamespace;
+  };
+  db: D1Database;
   user?: {
-    id: string
-    email: string
-  }
+    id: string;
+    email: string;
+  };
 }
 
-declare module '@tanstack/react-start' {
+declare module "@tanstack/react-start" {
   interface Register {
     server: {
-      requestContext: ServerContext
-    }
+      requestContext: ServerContext;
+    };
   }
 }
 ```
@@ -102,27 +105,27 @@ declare module '@tanstack/react-start' {
 
 ```typescript
 // src/worker.ts
-import handler, { createServerEntry } from '@tanstack/react-start/server-entry'
-import type { D1Database, KVNamespace } from '@cloudflare/workers-types'
+import type { D1Database, KVNamespace } from "@cloudflare/workers-types";
+import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
 
 interface ServerContext {
   env: {
-    D1: D1Database
-    KV: KVNamespace
-  }
+    D1: D1Database;
+    KV: KVNamespace;
+  };
   repository: {
-    users: { findById: (id: string) => Promise<any> }
-    sessions: { validate: (token: string) => Promise<any> }
-  }
+    users: { findById: (id: string) => Promise<any> };
+    sessions: { validate: (token: string) => Promise<any> };
+  };
   auth: {
-    getCurrentUser: (request: Request) => Promise<any>
-  }
-  user?: { id: string; email: string }
+    getCurrentUser: (request: Request) => Promise<any>;
+  };
+  user?: { id: string; email: string };
 }
 
-declare module '@tanstack/react-start' {
+declare module "@tanstack/react-start" {
   interface Register {
-    server: { requestContext: ServerContext }
+    server: { requestContext: ServerContext };
   }
 }
 
@@ -138,10 +141,10 @@ export default createServerEntry({
         sessions: { validate: async (token) => null },
       },
       auth: { getCurrentUser: async (request) => null },
-    }
-    return handler.fetch(request, { context })
+    };
+    return handler.fetch(request, { context });
   },
-})
+});
 ```
 
 ### Who Creates ServerContext?
@@ -180,18 +183,20 @@ The ServerContext is created **once per incoming HTTP request** inside the `fetc
 
 ```typescript
 // src/worker.ts
-import handler, { createServerEntry } from '@tanstack/react-start/server-entry'
-import type { D1Database, KVNamespace } from '@cloudflare/workers-types'
+import type { D1Database, KVNamespace } from "@cloudflare/workers-types";
+import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
 
 interface ServerContext {
-  env: { D1: D1Database; KV: KVNamespace }
-  repository: { users: { findById: (id: string) => Promise<any> } }
-  auth: { getCurrentUser: (request: Request) => Promise<any> }
-  user?: { id: string; email: string }
+  env: { D1: D1Database; KV: KVNamespace };
+  repository: { users: { findById: (id: string) => Promise<any> } };
+  auth: { getCurrentUser: (request: Request) => Promise<any> };
+  user?: { id: string; email: string };
 }
 
-declare module '@tanstack/react-start' {
-  interface Register { server: { requestContext: ServerContext } }
+declare module "@tanstack/react-start" {
+  interface Register {
+    server: { requestContext: ServerContext };
+  }
 }
 
 export default createServerEntry({
@@ -204,10 +209,10 @@ export default createServerEntry({
       },
       repository: { users: { findById: async (id) => null } },
       auth: { getCurrentUser: async (request) => null },
-    }
-    return handler.fetch(request, { context })
+    };
+    return handler.fetch(request, { context });
   },
-})
+});
 ```
 
 ### The Complete Pattern
@@ -215,26 +220,26 @@ export default createServerEntry({
 **File**: `src/lib/server-context.ts` - Define the type
 
 ```typescript
-import type { D1Database, KVNamespace } from '@cloudflare/workers-types'
+import type { D1Database, KVNamespace } from "@cloudflare/workers-types";
 
 export interface ServerContext {
   env: {
-    D1: D1Database
-    KV: KVNamespace
-  }
-  db: D1Database
+    D1: D1Database;
+    KV: KVNamespace;
+  };
+  db: D1Database;
   user?: {
-    id: string
-    email: string
-  }
+    id: string;
+    email: string;
+  };
 }
 
 // Module augmentation for type safety throughout the app
-declare module '@tanstack/react-start' {
+declare module "@tanstack/react-start" {
   interface Register {
     server: {
-      requestContext: ServerContext
-    }
+      requestContext: ServerContext;
+    };
   }
 }
 ```
@@ -242,8 +247,8 @@ declare module '@tanstack/react-start' {
 **File**: `src/worker.ts` - Create and pass context
 
 ```typescript
-import handler, { createServerEntry } from '@tanstack/react-start/server-entry'
-import type { ServerContext } from '@/lib/server-context'
+import type { ServerContext } from "@/lib/server-context";
+import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
 
 export default createServerEntry({
   async fetch(request: Request): Promise<Response> {
@@ -255,12 +260,12 @@ export default createServerEntry({
       },
       db: process.env.D1 as unknown as D1Database,
       user: await getUserFromCookie(request),
-    }
-    
+    };
+
     // Pass context to TanStack Start - it will propagate to middleware/loaders
-    return handler.fetch(request, { context })
+    return handler.fetch(request, { context });
   },
-})
+});
 ```
 
 ### How Context Flows Internally
@@ -273,18 +278,18 @@ const serverFnHandler = async ({ context }: TODO) => {
     {
       getRouter,
       startOptions: requestStartOptions,
-      contextAfterGlobalMiddlewares: context,  // ← Your context flows here
+      contextAfterGlobalMiddlewares: context, // ← Your context flows here
       request,
       executedRequestMiddlewares,
     },
     () =>
       handleServerAction({
         request,
-        context: requestOpts?.context,  // ← And here
+        context: requestOpts?.context, // ← And here
         serverFnId,
       }),
-  )
-}
+  );
+};
 ```
 
 TanStack Start wraps your context with internal data and stores it in AsyncLocalStorage:
@@ -296,7 +301,7 @@ export async function runWithStartContext<T>(
   context: StartStorageContext,
   fn: () => T | Promise<T>,
 ): Promise<T> {
-  return startStorage.run(context, fn)  // Stores context in AsyncLocalStorage
+  return startStorage.run(context, fn); // Stores context in AsyncLocalStorage
 }
 ```
 
@@ -306,11 +311,11 @@ TanStack Start wraps your ServerContext with additional internal data:
 
 ```typescript
 interface StartStorageContext {
-  getRouter: () => Awaitable<RegisteredRouter>
-  request: Request
-  startOptions: any
-  contextAfterGlobalMiddlewares: YourServerContext  // ← Your context is here
-  executedRequestMiddlewares: Set<any>
+  getRouter: () => Awaitable<RegisteredRouter>;
+  request: Request;
+  startOptions: any;
+  contextAfterGlobalMiddlewares: YourServerContext; // ← Your context is here
+  executedRequestMiddlewares: Set<any>;
 }
 ```
 
@@ -319,47 +324,48 @@ Your ServerContext is passed through as `contextAfterGlobalMiddlewares` and is a
 #### Using Context in Middleware
 
 ```typescript
-import { createMiddleware } from '@tanstack/react-start'
+import { createMiddleware } from "@tanstack/react-start";
 
-const authMiddleware = createMiddleware({ type: 'function' })
-  .server(async ({ next, context }) => {
+const authMiddleware = createMiddleware({ type: "function" }).server(
+  async ({ next, context }) => {
     // Access user from context
     if (!context.user) {
-      throw new Error('Unauthorized')
+      throw new Error("Unauthorized");
     }
-    
+
     // Add more context for downstream
     return next({
       context: {
         permissions: await getPermissions(context.user.id),
       },
-    })
-  })
+    });
+  },
+);
 
-const loggingMiddleware = createMiddleware({ type: 'function' })
+const loggingMiddleware = createMiddleware({ type: "function" })
   .middleware([authMiddleware])
   .server(async ({ next, context }) => {
     // Has both user and permissions
-    console.log('Request by:', context.user.name)
-    console.log('Permissions:', context.permissions)
-    return next()
-  })
+    console.log("Request by:", context.user.name);
+    console.log("Permissions:", context.permissions);
+    return next();
+  });
 ```
 
 #### Using Context in Server Functions
 
 ```typescript
-import { createServerFn } from '@tanstack/react-start'
+import { createServerFn } from "@tanstack/react-start";
 
 export const getTodos = createServerFn()
   .middleware([loggingMiddleware])
   .handler(async ({ context }) => {
     // Access db and user from context
     return context.db
-      .prepare('SELECT * FROM todos WHERE user_id = ?')
+      .prepare("SELECT * FROM todos WHERE user_id = ?")
       .bind(context.user.id)
-      .all()
-  })
+      .all();
+  });
 ```
 
 #### Client-to-Server Context
@@ -367,22 +373,23 @@ export const getTodos = createServerFn()
 You can send data from client middleware to server middleware:
 
 ```typescript
-const clientMiddleware = createMiddleware({ type: 'function' })
-  .client(async ({ next, context }) => {
+const clientMiddleware = createMiddleware({ type: "function" }).client(
+  async ({ next, context }) => {
     return next({
       sendContext: {
         workspaceId: context.selectedWorkspaceId,
       },
-    })
-  })
+    });
+  },
+);
 
-const serverMiddleware = createMiddleware({ type: 'function' })
+const serverMiddleware = createMiddleware({ type: "function" })
   .middleware([clientMiddleware])
   .server(async ({ next, context }) => {
     // workspaceId is now available on server
-    console.log(context.workspaceId)
-    return next()
-  })
+    console.log(context.workspaceId);
+    return next();
+  });
 ```
 
 ### 2. Router Context (TanStack Router)
@@ -410,71 +417,74 @@ Router context allows you to inject dependencies (services, data clients, helper
 
 ```typescript
 // src/router.tsx
-import { createRootRouteWithContext, createRouter } from '@tanstack/react-router'
+import {
+  createRootRouteWithContext,
+  createRouter,
+} from "@tanstack/react-router";
 
 interface MyRouterContext {
-  queryClient: QueryClient
-  fetchApi: <T>(endpoint: string) => Promise<T>
+  queryClient: QueryClient;
+  fetchApi: <T>(endpoint: string) => Promise<T>;
 }
 
 const rootRoute = createRootRouteWithContext<MyRouterContext>()({
   component: App,
-})
+});
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient();
 
 const router = createRouter({
   routeTree: rootRoute,
   context: {
     queryClient,
     fetchApi: async (endpoint) => {
-      const res = await fetch(`/api${endpoint}`)
-      return res.json()
+      const res = await fetch(`/api${endpoint}`);
+      return res.json();
     },
   },
-})
+});
 ```
 
 #### Using Context in Loaders
 
 ```typescript
 // src/routes/posts.tsx
-export const Route = createFileRoute('/posts')({
+export const Route = createFileRoute("/posts")({
   loader: ({ context }) => {
     // Access QueryClient from context
     return context.queryClient.ensureQueryData({
-      queryKey: ['posts'],
-      queryFn: () => context.fetchApi('/posts'),
-    })
+      queryKey: ["posts"],
+      queryFn: () => context.fetchApi("/posts"),
+    });
   },
-})
+});
 ```
 
 #### Modifying Context Per Route
 
 ```typescript
 // src/routes/todos.tsx
-export const Route = createFileRoute('/todos')({
+export const Route = createFileRoute("/todos")({
   beforeLoad: () => {
-    return { todosFilter: 'all' }
+    return { todosFilter: "all" };
   },
   loader: ({ context }) => {
     // Has both root context (queryClient) and route-specific context (todosFilter)
-    context.queryClient
-    context.todosFilter
+    context.queryClient;
+    context.todosFilter;
   },
-})
+});
 ```
 
 ### Context Comparison
 
-| Aspect | Request Context | Router Context |
-|--------|----------------|----------------|
-| **Layer** | Server-side middleware/handler | Router/loader layer |
-| **Primary use** | Middleware chain, server functions | Loaders, components |
-| **Access in loaders** | Via `context` parameter | Via `context` parameter |
-| **Access in server fns** | Via `context` parameter | Not directly available |
-| **Access in components** | Via `useServerFn` return | Via `useRouter` or `Route.useLoaderData` |
+| Aspect                   | Request Context                    | Router Context                           |
+| ------------------------ | ---------------------------------- | ---------------------------------------- |
+| **Layer**                | Server-side middleware/handler     | Router/loader layer                      |
+| **Primary use**          | Middleware chain, server functions | Loaders, components                      |
+| **Access in loaders**    | Via `context` parameter            | Via `context` parameter                  |
+| **Access in server fns** | Via `context` parameter            | Not directly available                   |
+| **Access in components** | Via `useServerFn` return           | Via `useRouter` or `Route.useLoaderData` |
 
 **Key insight**: In a server-side loader, you receive both contexts merged together. The Request Context flows from `handler.fetch(request, { context })` through middleware to loaders. Router Context is set up at router creation time and flows through the route matching process.
 
@@ -505,18 +515,18 @@ const serverFnHandler = async ({ context }: TODO) => {
     {
       getRouter,
       startOptions: requestStartOptions,
-      contextAfterGlobalMiddlewares: context,  // ← Your context arrives here
+      contextAfterGlobalMiddlewares: context, // ← Your context arrives here
       request,
       executedRequestMiddlewares,
     },
     () =>
       handleServerAction({
         request,
-        context: requestOpts?.context,  // ← And is passed here too
+        context: requestOpts?.context, // ← And is passed here too
         serverFnId,
       }),
-  )
-}
+  );
+};
 ```
 
 The key insight: **YOU create the context in step 1**, and TanStack Start propagates it through steps 2-6.
@@ -532,32 +542,36 @@ The crrbuis saas template uses a different pattern with React Router and Hono. N
 ```typescript
 export default {
   async fetch(request, env, ctx) {
-    const url = new URL(request.url)
-    
+    const url = new URL(request.url);
+
     // Initialize services per request (YOU create them)
-    const d1SessionService = createD1SessionService({ d1: env.D1, request })
-    const repository = createRepository({ db: d1SessionService.getSession() })
-    const authService = createAuthService({ db: d1SessionService.getSession() })
-    
+    const d1SessionService = createD1SessionService({ d1: env.D1, request });
+    const repository = createRepository({ db: d1SessionService.getSession() });
+    const authService = createAuthService({
+      db: d1SessionService.getSession(),
+    });
+
     // Set up React Router with your context
     hono.all("*", async (c) => {
-      const context = new ReactRouter.RouterContextProvider()
+      const context = new ReactRouter.RouterContextProvider();
       context.set(RequestContext, {
         env,
         authService,
         repository,
-        session: await authService.api.getSession({ headers: c.req.raw.headers }),
-      })
+        session: await authService.api.getSession({
+          headers: c.req.raw.headers,
+        }),
+      });
       const requestHandler = ReactRouter.createRequestHandler(
         () => import("virtual:react-router/server-build"),
         import.meta.env.MODE,
-      )
-      return requestHandler(c.req.raw, context)
-    })
-    
-    return await hono.fetch(request, env, ctx)
+      );
+      return requestHandler(c.req.raw, context);
+    });
+
+    return await hono.fetch(request, env, ctx);
   },
-}
+};
 ```
 
 Note: crrbuis uses `ReactRouter.RouterContextProvider` which is React Router's context mechanism, not TanStack Start's request context.
@@ -569,14 +583,14 @@ The solid-start-i18n-paraglide example shows wrapping the default handler:
 **File**: `refs/tan-start/examples/solid/start-i18n-paraglide/src/server.ts`
 
 ```typescript
-import { paraglideMiddleware } from './paraglide/server.js'
-import handler from '@tanstack/solid-start/server-entry'
+import handler from "@tanstack/solid-start/server-entry";
+import { paraglideMiddleware } from "./paraglide/server.js";
 
 export default {
   fetch(req: Request): Promise<Response> {
-    return paraglideMiddleware(req, ({ request }) => handler.fetch(request))
+    return paraglideMiddleware(req, ({ request }) => handler.fetch(request));
   },
-}
+};
 ```
 
 ## Recommended Project Structure
@@ -598,30 +612,30 @@ The ServerContext type is defined directly in `worker.ts` alongside the entry po
 ### Implementation: src/lib/server-context.ts
 
 ```typescript
-import type { D1Database, KVNamespace } from '@cloudflare/workers-types'
-import type { AuthService } from './services/auth'
-import type { Repository } from './repository'
+import type { D1Database, KVNamespace } from "@cloudflare/workers-types";
+import type { Repository } from "./repository";
+import type { AuthService } from "./services/auth";
 
 export interface ServerContext {
   env: {
-    D1: D1Database
-    KV: KVNamespace
-  }
-  db: D1Database
-  authService: AuthService
-  repository: Repository
+    D1: D1Database;
+    KV: KVNamespace;
+  };
+  db: D1Database;
+  authService: AuthService;
+  repository: Repository;
   user?: {
-    id: string
-    email: string
-    sessionId: string
-  }
+    id: string;
+    email: string;
+    sessionId: string;
+  };
 }
 
-declare module '@tanstack/react-start' {
+declare module "@tanstack/react-start" {
   interface Register {
     server: {
-      requestContext: ServerContext
-    }
+      requestContext: ServerContext;
+    };
   }
 }
 ```
@@ -633,96 +647,113 @@ This is where YOU create the ServerContext per request. The file is your Cloudfl
 **File**: `src/worker.ts`
 
 ```typescript
-import handler, { createServerEntry } from '@tanstack/react-start/server-entry'
-import type { D1Database, KVNamespace } from '@cloudflare/workers-types'
+import type { D1Database, KVNamespace } from "@cloudflare/workers-types";
+import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
 
 // Define your ServerContext type
 interface ServerContext {
   env: {
-    D1: D1Database
-    KV: KVNamespace
-  }
+    D1: D1Database;
+    KV: KVNamespace;
+  };
   repository: {
     users: {
-      findById: (id: string) => Promise<User | null>
-      findByEmail: (email: string) => Promise<User | null>
-    }
+      findById: (id: string) => Promise<User | null>;
+      findByEmail: (email: string) => Promise<User | null>;
+    };
     sessions: {
-      create: (userId: string) => Promise<Session>
-      validate: (token: string) => Promise<Session | null>
-    }
-  }
+      create: (userId: string) => Promise<Session>;
+      validate: (token: string) => Promise<Session | null>;
+    };
+  };
   auth: {
-    getCurrentUser: (request: Request) => Promise<User | null>
-    requireUser: (request: Request) => Promise<User>
-  }
+    getCurrentUser: (request: Request) => Promise<User | null>;
+    requireUser: (request: Request) => Promise<User>;
+  };
   user?: {
-    id: string
-    email: string
-    sessionId: string
-  }
+    id: string;
+    email: string;
+    sessionId: string;
+  };
 }
 
 // Module augmentation for type safety
-declare module '@tanstack/react-start' {
+declare module "@tanstack/react-start" {
   interface Register {
     server: {
-      requestContext: ServerContext
-    }
+      requestContext: ServerContext;
+    };
   }
 }
 
 // Helper to create repository (called per request)
-function createRepository(env: ServerContext['env']) {
-  const db = env.D1
+function createRepository(env: ServerContext["env"]) {
+  const db = env.D1;
   return {
     users: {
       findById: async (id: string) => {
-        const result = await db.prepare('SELECT * FROM users WHERE id = ?').bind(id).first()
-        return result as User | null
+        const result = await db
+          .prepare("SELECT * FROM users WHERE id = ?")
+          .bind(id)
+          .first();
+        return result as User | null;
       },
       findByEmail: async (email: string) => {
-        const result = await db.prepare('SELECT * FROM users WHERE email = ?').bind(email).first()
-        return result as User | null
+        const result = await db
+          .prepare("SELECT * FROM users WHERE email = ?")
+          .bind(email)
+          .first();
+        return result as User | null;
       },
     },
     sessions: {
       create: async (userId: string) => {
-        const token = crypto.randomUUID()
-        await db.prepare('INSERT INTO sessions (id, user_id, created_at) VALUES (?, ?, ?)').bind(token, userId, Date.now()).run()
-        return { token, userId } as Session
+        const token = crypto.randomUUID();
+        await db
+          .prepare(
+            "INSERT INTO sessions (id, user_id, created_at) VALUES (?, ?, ?)",
+          )
+          .bind(token, userId, Date.now())
+          .run();
+        return { token, userId } as Session;
       },
       validate: async (token: string) => {
-        const result = await db.prepare('SELECT * FROM sessions WHERE id = ?').bind(token).first()
-        return result as Session | null
+        const result = await db
+          .prepare("SELECT * FROM sessions WHERE id = ?")
+          .bind(token)
+          .first();
+        return result as Session | null;
       },
     },
-  }
+  };
 }
 
 // Helper to create auth service (called per request)
-function createAuth(repository: ServerContext['repository']) {
+function createAuth(repository: ServerContext["repository"]) {
   return {
     getCurrentUser: async (request: Request): Promise<User | null> => {
-      const cookie = request.headers.get('cookie')
-      if (!cookie) return null
-      
-      const sessionToken = cookie.split(';').find(c => c.trim().startsWith('session='))?.split('=')[1]
-      if (!sessionToken) return null
-      
-      const session = await repository.sessions.validate(sessionToken)
-      if (!session) return null
-      
-      return repository.users.findById(session.userId)
+      const cookie = request.headers.get("cookie");
+      if (!cookie) return null;
+
+      const sessionToken = cookie
+        .split(";")
+        .find((c) => c.trim().startsWith("session="))
+        ?.split("=")[1];
+      if (!sessionToken) return null;
+
+      const session = await repository.sessions.validate(sessionToken);
+      if (!session) return null;
+
+      return repository.users.findById(session.userId);
     },
     requireUser: async (request: Request): Promise<User> => {
-      const user = await createAuth(repository).getCurrentUser(request)
+      const user = await createAuth(repository).getCurrentUser(request);
       if (!user) {
-        throw new Response('Unauthorized', { status: 401 })
+        throw new Response("Unauthorized", { status: 401 });
       }
-      return user
+      return user;
     },
-  }
+  };
 }
 
 export default createServerEntry({
@@ -732,49 +763,51 @@ export default createServerEntry({
     const env = {
       D1: process.env.D1 as unknown as D1Database,
       KV: process.env.KV as unknown as KVNamespace,
-    }
-    
+    };
+
     // Create request-scoped services
-    const repository = createRepository(env)
-    const auth = createAuth(repository)
-    
+    const repository = createRepository(env);
+    const auth = createAuth(repository);
+
     // Optionally get current user
-    const user = await auth.getCurrentUser(request)
-    
+    const user = await auth.getCurrentUser(request);
+
     const context: ServerContext = {
       env,
       repository,
       auth,
-      user: user ? { id: user.id, email: user.email, sessionId: '' } : undefined,
-    }
-    
+      user: user
+        ? { id: user.id, email: user.email, sessionId: "" }
+        : undefined,
+    };
+
     // Pass context to TanStack Start handler
-    return handler.fetch(request, { context })
+    return handler.fetch(request, { context });
   },
-})
+});
 
 // Type definitions for clarity
 interface User {
-  id: string
-  email: string
-  created_at: number
+  id: string;
+  email: string;
+  created_at: number;
 }
 
 interface Session {
-  token: string
-  userId: string
+  token: string;
+  userId: string;
 }
 ```
 
 ### Implementation: src/start.ts
 
 ```typescript
-import { createStart } from '@tanstack/react-start'
-import { authMiddleware } from '@/lib/middleware/auth-middleware'
+import { createStart } from "@tanstack/react-start";
+import { authMiddleware } from "@/lib/middleware/auth-middleware";
 
 export const startInstance = createStart(() => ({
   requestMiddleware: [authMiddleware],
-}))
+}));
 ```
 
 Note: The `{ context }` in the second parameter is not destructuring - it's the `RequestOptions` object with a `context` property. The context you pass here is what flows to middleware and loaders.
@@ -782,12 +815,12 @@ Note: The `{ context }` in the second parameter is not destructuring - it's the 
 ### Implementation: src/start.ts
 
 ```typescript
-import { createStart } from '@tanstack/react-start'
-import { authMiddleware } from '@/lib/middleware/auth-middleware'
+import { createStart } from "@tanstack/react-start";
+import { authMiddleware } from "@/lib/middleware/auth-middleware";
 
 export const startInstance = createStart(() => ({
   requestMiddleware: [authMiddleware],
-}))
+}));
 ```
 
 ## Best Practices
@@ -822,20 +855,20 @@ export default createServerEntry({
     const env = {
       D1: process.env.D1 as unknown as D1Database,
       KV: process.env.KV as unknown as KVNamespace,
-    }
-    const repository = createRepository(env)
-    const authService = createAuthService({ repository })
-    
+    };
+    const repository = createRepository(env);
+    const authService = createAuthService({ repository });
+
     const context: ServerContext = {
       env,
       repository,
       auth: authService,
       user: await authService.getCurrentUser(request),
-    }
-    
-    return handler.fetch(request, { context })
+    };
+
+    return handler.fetch(request, { context });
   },
-})
+});
 ```
 
 ### 3. Use Module Augmentation for Type Safety
@@ -843,11 +876,11 @@ export default createServerEntry({
 Always type your context using module augmentation:
 
 ```typescript
-declare module '@tanstack/react-start' {
+declare module "@tanstack/react-start" {
   interface Register {
     server: {
-      requestContext: YourContextType
-    }
+      requestContext: YourContextType;
+    };
   }
 }
 ```
@@ -859,16 +892,14 @@ This provides end-to-end TypeScript safety throughout your middleware and loader
 Access and extend context in middleware for downstream handlers:
 
 ```typescript
-const userLoader = createMiddleware({ type: 'function' })
-  .server(async ({ next, context }) => {
-    const user = await context.authService.getCurrentUser(context.db)
+const userLoader = createMiddleware({ type: "function" }).server(
+  async ({ next, context }) => {
+    const user = await context.authService.getCurrentUser(context.db);
     return next({
-      context: {
-        ...context,
-        user,
-      },
-    })
-  })
+      context: { user },
+    });
+  },
+);
 ```
 
 ### 5. Validate Client-Sent Context
@@ -876,22 +907,22 @@ const userLoader = createMiddleware({ type: 'function' })
 If accepting context from the client, validate it before use:
 
 ```typescript
-import { zodValidator } from '@tanstack/zod-adapter'
-import { z } from 'zod'
+import { zodValidator } from "@tanstack/zod-adapter";
+import { z } from "zod";
 
-const clientContext = createMiddleware({ type: 'function' })
+const clientContext = createMiddleware({ type: "function" })
   .client(async ({ next, context }) => {
     return next({
       sendContext: {
         workspaceId: context.workspaceId,
       },
-    })
+    });
   })
   .server(async ({ next, data, context }) => {
     // Validate before using
-    const validatedWorkspaceId = z.string().uuid().parse(context.workspaceId)
-    return next()
-  })
+    const validatedWorkspaceId = z.string().uuid().parse(context.workspaceId);
+    return next();
+  });
 ```
 
 ### 6. Organize Middleware by Concern
@@ -900,18 +931,18 @@ Group related middleware and use dependency composition:
 
 ```typescript
 const authMiddleware = createMiddleware()
-  .middleware([loggingMiddleware])  // Logging first
+  .middleware([loggingMiddleware]) // Logging first
   .server(async ({ next, context }) => {
     // Auth logic
-    return next({ context: { user } })
-  })
+    return next({ context: { user } });
+  });
 
 const apiMiddleware = createMiddleware()
-  .middleware([authMiddleware])  // Auth required
+  .middleware([authMiddleware]) // Auth required
   .server(async ({ next, context }) => {
     // API-specific logic
-    return next()
-  })
+    return next();
+  });
 ```
 
 ## Accessing Context
@@ -919,34 +950,32 @@ const apiMiddleware = createMiddleware()
 ### In Middleware
 
 ```typescript
-createMiddleware({ type: 'function' })
-  .server(async ({ context, next }) => {
-    // Access context
-    context.user
-    context.db
-    return next()
-  })
+createMiddleware({ type: "function" }).server(async ({ context, next }) => {
+  // Access context
+  context.user;
+  context.db;
+  return next();
+});
 ```
 
 ### In Server Functions
 
 ```typescript
-createServerFn()
-  .handler(async ({ context }) => {
-    // Access context
-    return context.db.query('SELECT * FROM users')
-  })
+createServerFn().handler(async ({ context }) => {
+  // Access context
+  return context.db.query("SELECT * FROM users");
+});
 ```
 
 ### In Loaders
 
 ```typescript
-createFileRoute('/posts')({
+createFileRoute("/posts")({
   loader: async ({ context }) => {
     // Access context
-    return context.repository.getPosts(context.user.id)
+    return context.repository.getPosts(context.user.id);
   },
-})
+});
 ```
 
 ### In Global Middleware
@@ -956,13 +985,12 @@ Global middleware in `src/start.ts` also receives context:
 ```typescript
 export const startInstance = createStart(() => ({
   requestMiddleware: [
-    createMiddleware()
-      .server(async ({ next, context }) => {
-        // All requests go through this
-        return next({ context: { requestId: crypto.randomUUID() } })
-      })
+    createMiddleware().server(async ({ next, context }) => {
+      // All requests go through this
+      return next({ context: { requestId: crypto.randomUUID() } });
+    }),
   ],
-}))
+}));
 ```
 
 ## Related Files
@@ -984,11 +1012,14 @@ If you don't create `src/worker.ts`, TanStack Start uses its default entry point
 **File**: `refs/tan-start/packages/react-start/src/default-entry/server.ts`
 
 ```typescript
-import { createStartHandler, defaultStreamHandler } from '@tanstack/react-start/server'
+import {
+  createStartHandler,
+  defaultStreamHandler,
+} from "@tanstack/react-start/server";
 
-const fetch = createStartHandler(defaultStreamHandler)
+const fetch = createStartHandler(defaultStreamHandler);
 
-export default createServerEntry({ fetch })
+export default createServerEntry({ fetch });
 ```
 
 With the default, **context is empty** (`{}`) and you cannot pass custom data to middleware/loaders.
@@ -998,15 +1029,15 @@ With the default, **context is empty** (`{}`) and you cannot pass custom data to
 When you need context, create `src/worker.ts`:
 
 ```typescript
-import handler, { createServerEntry } from '@tanstack/react-start/server-entry'
+import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
 
 export default createServerEntry({
   async fetch(request: Request): Promise<Response> {
     // YOU create and pass context here
-    const context = { user: await getUser(request), db: process.env.D1 }
-    return handler.fetch(request, { context })
+    const context = { user: await getUser(request), db: process.env.D1 };
+    return handler.fetch(request, { context });
   },
-})
+});
 ```
 
 **This is the only way to provide custom context to your middleware and loaders.**
