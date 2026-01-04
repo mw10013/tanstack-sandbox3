@@ -1,3 +1,4 @@
+import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
@@ -23,7 +24,7 @@ const schema = z.object({
   email: z.email(),
 });
 
-export const action = createServerFn({
+export const actionServerFn = createServerFn({
   method: "POST",
 })
   .inputValidator((data: z.input<typeof schema>) => data)
@@ -76,23 +77,49 @@ export const Route = createFileRoute("/login")({
 });
 
 function RouteComponent() {
-  const callAction = useServerFn(action);
+  const action = useServerFn(actionServerFn);
+  const [actionData, setActionData] =
+    React.useState<Awaited<ReturnType<typeof action>>>();
   const form = useForm({
     defaultValues: {
       email: "",
     },
     onSubmit: async ({ value }) => {
       console.log(`onSubmit: value: ${JSON.stringify(value)}`);
-      const result = await callAction({ data: value });
+      const result = await action({ data: value });
       console.log(`action result: ${JSON.stringify(result)}`);
       if (!result.success) {
         form.setErrorMap(result.errorMap);
       }
+      setActionData(result);
     },
   });
 
+  if (actionData?.success) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center">
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle>Check your email</CardTitle>
+            <CardDescription>
+              If an account exists for that email, a magic sign-in link has been
+              sent.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+        {actionData.magicLink && (
+          <div className="mt-4">
+            <a href={actionData.magicLink} className="block">
+              {actionData.magicLink}
+            </a>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-6">
+    <div className="flex min-h-screen items-center justify-center">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Sign in / Sign up</CardTitle>
