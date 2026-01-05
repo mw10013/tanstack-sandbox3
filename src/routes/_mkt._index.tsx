@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { siGithub } from "simple-icons";
 import { Button } from "@/components/ui/button";
 
-const getLoaderData = createServerFn().handler(({ context: { session } }) => {
+const loaderServerFn = createServerFn().handler(({ context: { session } }) => {
   if (session?.user) {
     return {
       sessionUser: {
@@ -18,7 +18,7 @@ const getLoaderData = createServerFn().handler(({ context: { session } }) => {
 });
 
 export const Route = createFileRoute("/_mkt/_index")({
-  loader: () => getLoaderData(),
+  loader: () => loaderServerFn(),
   component: RouteComponent,
 });
 

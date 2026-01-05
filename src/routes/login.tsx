@@ -28,12 +28,8 @@ export const actionServerFn = createServerFn({
   method: "POST",
 })
   .inputValidator((data: z.input<typeof schema>) => data)
-  .handler(async ({ data, context }) => {
-    const { authService, env } = context;
+  .handler(async ({ data, context: { authService, env } }) => {
     const parseResult = schema.safeParse(data);
-    console.log(
-      `action.handler: parseResult: ${JSON.stringify({ parseResult, data })}`,
-    );
     if (!parseResult.success) {
       const { formErrors, fieldErrors } = z.flattenError(parseResult.error);
       const errorMap = {
@@ -47,7 +43,6 @@ export const actionServerFn = createServerFn({
           }, {}),
         },
       };
-      console.log(`action: errorMap: ${JSON.stringify({ errorMap })}`);
       return { success: false, errorMap };
     }
     const request = getRequest();
@@ -77,9 +72,9 @@ export const Route = createFileRoute("/login")({
 });
 
 function RouteComponent() {
-  const action = useServerFn(actionServerFn);
-  const mutation = useMutation({
-    mutationFn: async (data: z.input<typeof schema>) => action({ data }),
+  const actionFn = useServerFn(actionServerFn);
+  const action = useMutation({
+    mutationFn: async (data: z.input<typeof schema>) => actionFn({ data }),
     onSuccess: (result) => {
       if (!result.success) {
         form.setErrorMap(result.errorMap);
@@ -92,11 +87,11 @@ function RouteComponent() {
     },
     onSubmit: async ({ value }) => {
       console.log(`onSubmit: value: ${JSON.stringify(value)}`);
-      await mutation.mutateAsync(value);
+      await action.mutateAsync(value);
     },
   });
 
-  if (mutation.data?.success) {
+  if (action.data?.success) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center">
         <Card className="w-full max-w-sm">
@@ -108,10 +103,10 @@ function RouteComponent() {
             </CardDescription>
           </CardHeader>
         </Card>
-        {mutation.data.magicLink && (
+        {action.data.magicLink && (
           <div className="mt-4">
-            <a href={mutation.data.magicLink} className="block">
-              {mutation.data.magicLink}
+            <a href={action.data.magicLink} className="block">
+              {action.data.magicLink}
             </a>
           </div>
         )}
@@ -175,10 +170,10 @@ function RouteComponent() {
                   <Button
                     type="submit"
                     form="login-form"
-                    disabled={!canSubmit || mutation.isPending}
+                    disabled={!canSubmit || action.isPending}
                     className="w-full"
                   >
-                    {mutation.isPending
+                    {action.isPending
                       ? "Sending..."
                       : isSubmitting
                         ? "..."
