@@ -43,9 +43,9 @@ const beforeLoadServerFn = createServerFn().handler(
     if (session.user.role !== "user") {
       // Cannot throw Response directly - TanStack Start serializes errors to transfer
       // from server to client, and Response contains non-serializable properties
-      // (ReadableStream, Headers, etc.). Using notFound() is a safe alternative.
+      // (ReadableStream, Headers, etc.).
       // eslint-disable-next-line @typescript-eslint/only-throw-error
-      throw notFound();
+      throw redirect({ to: "/" });
     }
     return { sessionUser: session.user };
   },
