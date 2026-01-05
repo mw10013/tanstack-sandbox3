@@ -275,7 +275,7 @@ export function createAuthService(
   return auth;
 }
 
-export const signOutFn = createServerFn({ method: "POST" }).handler(
+export const signOutServerFn = createServerFn({ method: "POST" }).handler(
   async ({ context: { authService } }) => {
     const request = getRequest();
     const { headers } = await authService.api.signOut({

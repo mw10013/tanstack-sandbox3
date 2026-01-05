@@ -1,9 +1,10 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { siGithub } from "simple-icons";
 import { AppLogoIcon } from "@/components/app-logo-icon";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { signOutServerFn } from "@/lib/auth-service";
 
 const loaderServerFn = createServerFn().handler(({ context: { session } }) => {
   return {
@@ -34,6 +35,7 @@ function RouteComponent() {
 
 function Header() {
   const loaderData = Route.useLoaderData();
+  const signOutFn = useServerFn(signOutServerFn);
   return (
     <header className="bg-background/95 sticky top-0 z-10 w-full backdrop-blur">
       <div className="flex h-16 items-center justify-between gap-2">
@@ -65,11 +67,9 @@ function Header() {
             <GitHubRepoLink />
             <Separator orientation="vertical" className="mx-1 h-6 min-h-6" />
             {loaderData.isSignedIn ? (
-              <form action="/signout" method="post">
-                <Button variant="outline" type="submit">
-                  Sign Out
-                </Button>
-              </form>
+              <Button variant="outline" onClick={() => signOutFn()}>
+                Sign Out
+              </Button>
             ) : (
               <Button variant="default" size="sm" render={<a href="/login" />}>
                 Sign in / Sign up
