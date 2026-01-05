@@ -1,10 +1,13 @@
 import type { StripeService } from "@/lib/stripe-service";
 import type { BetterAuthOptions } from "better-auth";
-import { d1Adapter } from "@/lib/d1-adapter";
 import { stripe } from "@better-auth/stripe";
+import { redirect } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { betterAuth } from "better-auth";
 import { createAuthMiddleware } from "better-auth/api";
 import { admin, magicLink, organization } from "better-auth/plugins";
+import { d1Adapter } from "@/lib/d1-adapter";
 
 export type AuthService = ReturnType<typeof createAuthService>;
 
@@ -271,3 +274,18 @@ export function createAuthService(
   );
   return auth;
 }
+
+export const signOutFn = createServerFn({ method: "POST" }).handler(
+  async ({ context: { authService } }) => {
+    const request = getRequest();
+    const { headers } = await authService.api.signOut({
+      headers: request.headers,
+      returnHeaders: true,
+    });
+    // eslint-disable-next-line @typescript-eslint/only-throw-error
+    throw redirect({
+      to: "/login",
+      headers,
+    });
+  },
+);
