@@ -1,6 +1,7 @@
 import {
   createFileRoute,
   Link,
+  notFound,
   Outlet,
   redirect,
   useMatchRoute,
@@ -40,8 +41,11 @@ const beforeLoadServerFn = createServerFn().handler(
       throw redirect({ to: "/login" });
     }
     if (session.user.role !== "user") {
+      // Cannot throw Response directly - TanStack Start serializes errors to transfer
+      // from server to client, and Response contains non-serializable properties
+      // (ReadableStream, Headers, etc.). Using notFound() is a safe alternative.
       // eslint-disable-next-line @typescript-eslint/only-throw-error
-      throw new Response("Forbidden", { status: 403 });
+      throw notFound();
     }
     return { sessionUser: session.user };
   },
