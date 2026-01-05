@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { siGithub } from "simple-icons";
 import { AppLogoIcon } from "@/components/app-logo-icon";
@@ -71,7 +71,7 @@ function Header() {
                 Sign Out
               </Button>
             ) : (
-              <Button variant="default" size="sm" render={<a href="/login" />}>
+              <Button variant="default" size="sm" render={<Link to="/login" />}>
                 Sign in / Sign up
               </Button>
             )}
