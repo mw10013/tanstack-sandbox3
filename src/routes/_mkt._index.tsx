@@ -13,7 +13,6 @@ const loaderServerFn = createServerFn().handler(({ context: { session } }) => {
       },
     };
   }
-
   return {};
 });
 

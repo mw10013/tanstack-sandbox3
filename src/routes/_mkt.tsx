@@ -1,10 +1,19 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
 import { siGithub } from "simple-icons";
 import { AppLogoIcon } from "@/components/app-logo-icon";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
+const loaderServerFn = createServerFn().handler(({ context: { session } }) => {
+  return {
+    isSignedIn: Boolean(session?.user),
+    sessionUser: session?.user,
+  };
+});
+
 export const Route = createFileRoute("/_mkt")({
+  loader: () => loaderServerFn(),
   component: RouteComponent,
 });
 
@@ -24,7 +33,7 @@ function RouteComponent() {
 }
 
 function Header() {
-  // const loaderData = Route.useLoaderData();
+  const loaderData = Route.useLoaderData();
   return (
     <header className="bg-background/95 sticky top-0 z-10 w-full backdrop-blur">
       <div className="flex h-16 items-center justify-between gap-2">
@@ -55,7 +64,7 @@ function Header() {
           <div className="flex items-center gap-2">
             <GitHubRepoLink />
             <Separator orientation="vertical" className="mx-1 h-6 min-h-6" />
-            {/* {loaderData.sessionUser ? (
+            {loaderData.isSignedIn ? (
               <form action="/signout" method="post">
                 <Button variant="outline" type="submit">
                   Sign Out
@@ -65,7 +74,7 @@ function Header() {
               <Button variant="default" size="sm" render={<a href="/login" />}>
                 Sign in / Sign up
               </Button>
-            )} */}
+            )}
           </div>
         </div>
       </div>
