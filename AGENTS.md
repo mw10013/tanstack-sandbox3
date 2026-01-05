@@ -16,6 +16,7 @@
 
 - **TanStack Start**: `refs/tan-start/docs/` (MDX files - start/framework/react)
 - **TanStack Router**: `refs/tan-router/docs/` (MDX files - router/framework/react)
+- **TanStack Query**: `refs/tan-query/docs/` (Markdown files - framework/react, reference, eslint)
 - **TanStack Form**: `refs/tan-form/docs/` (Markdown files)
 - **Shadcn UI**: `refs/shadcn/apps/v4/content/docs/` (MDX files)
 - **Base UI**: `refs/base-ui/docs/src/app/(docs)/(content)/react/` (MDX files in subdirs)
