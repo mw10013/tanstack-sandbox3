@@ -15,8 +15,8 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as MktRouteImport } from './routes/_mkt'
-import { Route as MktIndexRouteImport } from './routes/_mkt._index'
 import { Route as SandboxIndexRouteImport } from './routes/sandbox.index'
+import { Route as MktIndexRouteImport } from './routes/_mkt.index'
 import { Route as SandboxUsersRouteImport } from './routes/sandbox.users'
 import { Route as SandboxForm3RouteImport } from './routes/sandbox.form3'
 import { Route as SandboxExampleRouteImport } from './routes/sandbox.example'
@@ -51,14 +51,15 @@ const MktRoute = MktRouteImport.update({
   id: '/_mkt',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MktIndexRoute = MktIndexRouteImport.update({
-  id: '/_index',
-  getParentRoute: () => MktRoute,
-} as any)
 const SandboxIndexRoute = SandboxIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => SandboxRoute,
+} as any)
+const MktIndexRoute = MktIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MktRoute,
 } as any)
 const SandboxUsersRoute = SandboxUsersRouteImport.update({
   id: '/users',
@@ -90,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/sandbox/example': typeof SandboxExampleRoute
   '/sandbox/form3': typeof SandboxForm3Route
   '/sandbox/users': typeof SandboxUsersRoute
+  '/': typeof MktIndexRoute
   '/sandbox/': typeof SandboxIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -101,6 +103,7 @@ export interface FileRoutesByTo {
   '/sandbox/example': typeof SandboxExampleRoute
   '/sandbox/form3': typeof SandboxForm3Route
   '/sandbox/users': typeof SandboxUsersRoute
+  '/': typeof MktIndexRoute
   '/sandbox': typeof SandboxIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -112,10 +115,10 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/magic-link': typeof MagicLinkRoute
   '/sandbox': typeof SandboxRouteWithChildren
-  '/_mkt/_index': typeof MktIndexRoute
   '/sandbox/example': typeof SandboxExampleRoute
   '/sandbox/form3': typeof SandboxForm3Route
   '/sandbox/users': typeof SandboxUsersRoute
+  '/_mkt/': typeof MktIndexRoute
   '/sandbox/': typeof SandboxIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -130,6 +133,7 @@ export interface FileRouteTypes {
     | '/sandbox/example'
     | '/sandbox/form3'
     | '/sandbox/users'
+    | '/'
     | '/sandbox/'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
@@ -141,6 +145,7 @@ export interface FileRouteTypes {
     | '/sandbox/example'
     | '/sandbox/form3'
     | '/sandbox/users'
+    | '/'
     | '/sandbox'
     | '/api/auth/$'
   id:
@@ -151,10 +156,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/magic-link'
     | '/sandbox'
-    | '/_mkt/_index'
     | '/sandbox/example'
     | '/sandbox/form3'
     | '/sandbox/users'
+    | '/_mkt/'
     | '/sandbox/'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
@@ -213,19 +218,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MktRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_mkt/_index': {
-      id: '/_mkt/_index'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof MktIndexRouteImport
-      parentRoute: typeof MktRoute
-    }
     '/sandbox/': {
       id: '/sandbox/'
       path: '/'
       fullPath: '/sandbox/'
       preLoaderRoute: typeof SandboxIndexRouteImport
       parentRoute: typeof SandboxRoute
+    }
+    '/_mkt/': {
+      id: '/_mkt/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof MktIndexRouteImport
+      parentRoute: typeof MktRoute
     }
     '/sandbox/users': {
       id: '/sandbox/users'

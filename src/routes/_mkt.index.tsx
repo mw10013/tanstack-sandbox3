@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { siGithub } from "simple-icons";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/_mkt/_index")({
+export const Route = createFileRoute("/_mkt/")({
   component: RouteComponent,
 });
 

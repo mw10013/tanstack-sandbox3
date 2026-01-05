@@ -284,7 +284,7 @@ export const signOutServerFn = createServerFn({ method: "POST" }).handler(
     });
     // eslint-disable-next-line @typescript-eslint/only-throw-error
     throw redirect({
-      to: "/login",
+      to: "/",
       headers,
     });
   },
