@@ -1,5 +1,5 @@
-import React from "react";
 import { useForm } from "@tanstack/react-form";
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
@@ -78,24 +78,25 @@ export const Route = createFileRoute("/login")({
 
 function RouteComponent() {
   const action = useServerFn(actionServerFn);
-  const [actionData, setActionData] =
-    React.useState<Awaited<ReturnType<typeof action>>>();
+  const mutation = useMutation({
+    mutationFn: async (data: z.input<typeof schema>) => action({ data }),
+    onSuccess: (result) => {
+      if (!result.success) {
+        form.setErrorMap(result.errorMap);
+      }
+    },
+  });
   const form = useForm({
     defaultValues: {
       email: "",
     },
     onSubmit: async ({ value }) => {
       console.log(`onSubmit: value: ${JSON.stringify(value)}`);
-      const result = await action({ data: value });
-      console.log(`action result: ${JSON.stringify(result)}`);
-      if (!result.success) {
-        form.setErrorMap(result.errorMap);
-      }
-      setActionData(result);
+      await mutation.mutateAsync(value);
     },
   });
 
-  if (actionData?.success) {
+  if (mutation.data?.success) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center">
         <Card className="w-full max-w-sm">
@@ -107,10 +108,10 @@ function RouteComponent() {
             </CardDescription>
           </CardHeader>
         </Card>
-        {actionData.magicLink && (
+        {mutation.data.magicLink && (
           <div className="mt-4">
-            <a href={actionData.magicLink} className="block">
-              {actionData.magicLink}
+            <a href={mutation.data.magicLink} className="block">
+              {mutation.data.magicLink}
             </a>
           </div>
         )}
@@ -174,10 +175,14 @@ function RouteComponent() {
                   <Button
                     type="submit"
                     form="login-form"
-                    disabled={!canSubmit}
+                    disabled={!canSubmit || mutation.isPending}
                     className="w-full"
                   >
-                    {isSubmitting ? "..." : "Send magic link"}
+                    {mutation.isPending
+                      ? "Sending..."
+                      : isSubmitting
+                        ? "..."
+                        : "Send magic link"}
                   </Button>
                 )}
               </form.Subscribe>
