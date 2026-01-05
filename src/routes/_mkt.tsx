@@ -67,7 +67,7 @@ function Header() {
             <GitHubRepoLink />
             <Separator orientation="vertical" className="mx-1 h-6 min-h-6" />
             {loaderData.isSignedIn ? (
-              <Button variant="outline" onClick={() => signOutFn()}>
+              <Button variant="outline" onClick={() => void signOutFn()}>
                 Sign Out
               </Button>
             ) : (
