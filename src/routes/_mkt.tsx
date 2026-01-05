@@ -6,15 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { signOutServerFn } from "@/lib/auth-service";
 
-const loaderServerFn = createServerFn().handler(({ context: { session } }) => {
-  return {
-    isSignedIn: Boolean(session?.user),
-    sessionUser: session?.user,
-  };
-});
+const beforeLoadServerFn = createServerFn().handler(
+  ({ context: { session } }) => {
+    return {
+      sessionUser: session?.user,
+    };
+  },
+);
 
 export const Route = createFileRoute("/_mkt")({
-  loader: () => loaderServerFn(),
+  beforeLoad: async () => {
+    return await beforeLoadServerFn();
+  },
   component: RouteComponent,
 });
 
@@ -34,7 +37,7 @@ function RouteComponent() {
 }
 
 function Header() {
-  const loaderData = Route.useLoaderData();
+  const { sessionUser } = Route.useRouteContext();
   const signOutFn = useServerFn(signOutServerFn);
   return (
     <header className="bg-background/95 sticky top-0 z-10 w-full backdrop-blur">
@@ -66,7 +69,7 @@ function Header() {
           <div className="flex items-center gap-2">
             <GitHubRepoLink />
             <Separator orientation="vertical" className="mx-1 h-6 min-h-6" />
-            {loaderData.isSignedIn ? (
+            {sessionUser ? (
               <Button variant="outline" onClick={() => void signOutFn()}>
                 Sign Out
               </Button>

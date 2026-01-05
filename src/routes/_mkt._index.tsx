@@ -1,28 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
 import { siGithub } from "simple-icons";
 import { Button } from "@/components/ui/button";
 
-const loaderServerFn = createServerFn().handler(({ context: { session } }) => {
-  if (session?.user) {
-    return {
-      sessionUser: {
-        userId: session.user.id,
-        email: session.user.email,
-        role: session.user.role,
-      },
-    };
-  }
-  return {};
-});
-
 export const Route = createFileRoute("/_mkt/_index")({
-  loader: () => loaderServerFn(),
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const loaderData = Route.useLoaderData();
+  const { sessionUser } = Route.useRouteContext();
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center py-12">
@@ -45,16 +30,12 @@ function RouteComponent() {
           and edge infrastructure.
         </p>
         <div className="mt-6 flex w-fit gap-4">
-          {loaderData.sessionUser ? (
+          {sessionUser ? (
             <Button
               variant="default"
               className="h-11 rounded-full! px-6 text-base! font-medium"
               render={
-                <a
-                  href={
-                    loaderData.sessionUser.role === "admin" ? "/admin" : "/app"
-                  }
-                />
+                <a href={sessionUser.role === "admin" ? "/admin" : "/app"} />
               }
             >
               Go to Dashboard
