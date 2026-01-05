@@ -3,6 +3,7 @@ import {
   Link,
   Outlet,
   redirect,
+  useMatchRoute,
 } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { ChevronsUpDown, LogOut } from "lucide-react";
@@ -67,12 +68,7 @@ function RouteComponent() {
 }
 
 function AppSidebar({ user }: { user: { email: string } }) {
-  const items = [
-    {
-      id: "Dashboard",
-      to: "/admin",
-    },
-  ];
+  const matchRoute = useMatchRoute();
 
   return (
     <Sidebar>
@@ -90,13 +86,12 @@ function AppSidebar({ user }: { user: { email: string } }) {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton render={<Link to={item.to} />}>
-                    {item.id}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={Boolean(matchRoute({ to: "/admin" }))}
+                  render={<Link to="/admin">Dashboard</Link>}
+                />
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
