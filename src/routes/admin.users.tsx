@@ -64,9 +64,7 @@ export const getUsers = createServerFn({ method: "GET" }).handler(
 );
 
 export const unbanUser = createServerFn({ method: "POST" })
-  .inputValidator((data: { userId: string }) =>
-    z.object({ userId: z.string() }).parse(data),
-  )
+  .inputValidator(z.object({ userId: z.string() }))
   .handler(async ({ data, context: { authService } }) => {
     const request = getRequest();
     await authService.api.unbanUser({
