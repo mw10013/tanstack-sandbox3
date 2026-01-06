@@ -1,9 +1,12 @@
 import * as React from "react";
 import { useForm } from "@tanstack/react-form";
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
+import { AlertCircle } from "lucide-react";
 import { z } from "zod";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -37,6 +40,11 @@ import {
 
 const LIMIT = 10;
 
+const banUserSchema = z.object({
+  userId: z.string(),
+  banReason: z.string().max(4),
+});
+
 const actionSchema = z.discriminatedUnion("intent", [
   z.object({
     intent: z.literal("ban"),
@@ -62,6 +70,54 @@ export const getUsers = createServerFn({ method: "GET" }).handler(
     };
   },
 );
+
+export const banUser = createServerFn({ method: "POST" })
+  .inputValidator((data: z.input<typeof banUserSchema>) => data)
+  .handler(async ({ data, context: { authService } }) => {
+    const parseResult = banUserSchema.safeParse(data);
+    if (!parseResult.success) {
+      const { formErrors, fieldErrors } = z.flattenError(parseResult.error);
+      const errorMap = {
+        onSubmit: {
+          ...(formErrors.length > 0 ? { form: formErrors.join(", ") } : {}),
+          fields: Object.entries(fieldErrors).reduce<
+            Record<string, { message: string }[]>
+          >((acc, [key, messages]) => {
+            acc[key] = messages.map((message) => ({ message }));
+            return acc;
+          }, {}),
+        },
+      };
+      return { success: false, errorMap };
+    }
+    console.log(`banUser: willBan: ${JSON.stringify(parseResult.data)}`);
+
+    try {
+      const request = getRequest();
+      await authService.api.banUser({
+        headers: request.headers,
+        body: {
+          userId: parseResult.data.userId,
+          banReason: parseResult.data.banReason,
+        },
+      });
+    } catch (error: unknown) {
+      console.error("Error banning user:", error);
+      return {
+        success: false,
+        errorMap: {
+          onSubmit: {
+            form: `Failed to ban user: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+            fields: {},
+          },
+        },
+      };
+    }
+    console.log(`banUser: didBan: ${JSON.stringify(parseResult.data)}`);
+    return { success: true };
+  });
 
 export const unbanUser = createServerFn({ method: "POST" })
   .inputValidator(z.object({ userId: z.string() }))
@@ -265,9 +321,9 @@ function RouteComponent() {
                 : { isOpen: false, userId: undefined },
           );
         }}
-        onSubmit={({ userId, banReason }) => {
-          void handleAction("ban", userId, banReason);
-        }}
+        // onSubmit={({ userId, banReason }) => {
+        //   void handleAction("ban", userId, banReason);
+        // }}
       />
     </div>
   );
@@ -277,36 +333,39 @@ function BanDialog({
   userId,
   isOpen,
   onOpenChange,
-  onSubmit,
 }: {
   userId?: string;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onSubmit: ({
-    userId,
-    banReason,
-  }: {
-    userId: string;
-    banReason: string;
-  }) => void;
 }) {
+  const router = useRouter();
+
+  const actionServerFn = useServerFn(banUser);
+  const action = useMutation({
+    mutationFn: async (data: z.input<typeof banUserSchema>) =>
+      actionServerFn({ data }),
+    onSuccess: (result) => {
+      if (result.success) {
+        void onOpenChange(false);
+        void router.invalidate();
+      } else {
+        form.setErrorMap(result.errorMap);
+      }
+    },
+  });
+
   const form = useForm({
     defaultValues: {
-      intent: "ban" as const,
-      userId: userId ?? "",
       banReason: "",
     },
     onSubmit: ({ value }) => {
-      onSubmit({ userId: value.userId, banReason: value.banReason });
-      onOpenChange(false);
+      if (userId) action.mutate({ userId, banReason: value.banReason });
     },
   });
 
   React.useEffect(() => {
     if (isOpen && userId) {
       form.reset({
-        intent: "ban",
-        userId,
         banReason: "",
       });
     }
@@ -331,26 +390,25 @@ function BanDialog({
           }}
         >
           <FieldGroup>
-            <form.Field
-              name="intent"
-              children={(field) => (
-                <input
-                  name={field.name}
-                  type="hidden"
-                  value={field.state.value}
-                />
-              )}
-            />
-            <form.Field
-              name="userId"
-              children={(field) => (
-                <input
-                  name={field.name}
-                  type="hidden"
-                  value={field.state.value}
-                />
-              )}
-            />
+            <form.Subscribe selector={(formState) => formState.errors}>
+              {(formErrors) =>
+                formErrors.length > 0 && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="size-4" />
+                    <AlertTitle>Form Errors</AlertTitle>
+                    <AlertDescription>
+                      <ul className="ml-4 flex list-disc flex-col gap-1">
+                        {formErrors.map(
+                          (error, index) =>
+                            error && <li key={index}>{error}</li>,
+                        )}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                )
+              }
+            </form.Subscribe>
+
             <form.Field
               name="banReason"
               children={(field) => {
@@ -399,9 +457,9 @@ function BanDialog({
               <Button
                 type="submit"
                 form="ban-form"
-                disabled={!canSubmit || isSubmitting}
+                disabled={!canSubmit || isSubmitting || action.isPending}
               >
-                {isSubmitting ? "..." : "Ban"}
+                {isSubmitting || action.isPending ? "..." : "Ban"}
               </Button>
             )}
           </form.Subscribe>
