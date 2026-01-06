@@ -62,6 +62,19 @@ export const getUsers = createServerFn({ method: "GET" }).handler(
   },
 );
 
+export const unbanUser = createServerFn({ method: "POST" })
+  .inputValidator((data: { userId: string }) =>
+    z.object({ userId: z.string() }).parse(data),
+  )
+  .handler(async ({ data, context: { env } }) => {
+    await env.D1.prepare(
+      "update User set banned = 0, banReason = null, banExpires = null where userId = ?1",
+    )
+      .bind(data.userId)
+      .run();
+    return { success: true };
+  });
+
 export const userAction = createServerFn({ method: "POST" })
   .inputValidator((data: z.input<typeof actionSchema>) => data)
   .handler(async ({ data, context: { env, authService } }) => {
@@ -128,6 +141,7 @@ function RouteComponent() {
   const router = useRouter();
   const data = Route.useLoaderData();
   const actionFn = useServerFn(userAction);
+  const unbanUserFn = useServerFn(unbanUser);
   const [banDialog, setBanDialog] = React.useState<{
     isOpen: boolean;
     userId?: string;
@@ -202,7 +216,12 @@ function RouteComponent() {
                     {user.banned ? (
                       <DropdownMenuItem
                         onClick={() => {
-                          void handleAction("unban", String(user.userId));
+                          void (async () => {
+                            await unbanUserFn({
+                              data: { userId: String(user.userId) },
+                            });
+                            await router.invalidate();
+                          })();
                         }}
                       >
                         Unban
