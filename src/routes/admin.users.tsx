@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { AlertCircle } from "lucide-react";
@@ -42,18 +42,8 @@ const LIMIT = 10;
 
 const banUserSchema = z.object({
   userId: z.string(),
-  banReason: z.string().max(4),
+  banReason: z.string().max(100),
 });
-
-const actionSchema = z.discriminatedUnion("intent", [
-  z.object({
-    intent: z.literal("ban"),
-    userId: z.string(),
-    banReason: z.string().max(500),
-  }),
-  z.object({ intent: z.literal("unban"), userId: z.string() }),
-  z.object({ intent: z.literal("impersonate"), userId: z.string() }),
-]);
 
 export const getUsers = createServerFn({ method: "GET" }).handler(
   async ({ context: { repository } }) => {
@@ -130,61 +120,17 @@ export const unbanUser = createServerFn({ method: "POST" })
     return { success: true };
   });
 
-export const userAction = createServerFn({ method: "POST" })
-  .inputValidator((data: z.input<typeof actionSchema>) => data)
-  .handler(async ({ data, context: { env, authService } }) => {
-    const parseResult = actionSchema.safeParse(data);
-    if (!parseResult.success) {
-      const { formErrors, fieldErrors } = z.flattenError(parseResult.error);
-      const errorMap = {
-        onSubmit: {
-          ...(formErrors.length > 0 ? { form: formErrors.join(", ") } : {}),
-          fields: Object.entries(fieldErrors).reduce<
-            Record<string, { message: string }[]>
-          >((acc, [key, messages]) => {
-            acc[key] = messages.map((message) => ({ message }));
-            return acc;
-          }, {}),
-        },
-      };
-      return { success: false, errorMap };
-    }
-    switch (parseResult.data.intent) {
-      case "ban": {
-        await env.D1.prepare(
-          "update User set banned = 1, banReason = ?1, banExpires = datetime('now', '+1 year') where userId = ?2",
-        )
-          .bind(parseResult.data.banReason, parseResult.data.userId)
-          .run();
-        return { success: true };
-      }
-      case "unban": {
-        await env.D1.prepare(
-          "update User set banned = 0, banReason = null, banExpires = null where userId = ?1",
-        )
-          .bind(parseResult.data.userId)
-          .run();
-        return { success: true };
-      }
-      case "impersonate": {
-        const session = await authService.api.impersonateUser({
-          body: { userId: parseResult.data.userId },
-          returnHeaders: true,
-        });
-        const headers = new Headers();
-        session.headers.forEach((value, key) => {
-          if (key.toLowerCase() === "set-cookie") {
-            headers.append(key, value);
-          }
-        });
-        throw Object.assign(new Error("impersonate"), {
-          _redirect: { to: "/app", headers },
-        });
-      }
-      default:
-        void parseResult.data;
-        throw new Error("Unexpected intent");
-    }
+export const impersonateUser = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ userId: z.string() }))
+  .handler(async ({ data, context: { authService } }) => {
+    const request = getRequest();
+    const { headers } = await authService.api.impersonateUser({
+      returnHeaders: true,
+      headers: request.headers,
+      body: { userId: data.userId },
+    });
+    // eslint-disable-next-line @typescript-eslint/only-throw-error
+    throw redirect({ to: "/app", headers });
   });
 
 export const Route = createFileRoute("/admin/users")({
@@ -195,31 +141,12 @@ export const Route = createFileRoute("/admin/users")({
 function RouteComponent() {
   const router = useRouter();
   const data = Route.useLoaderData();
-  const actionFn = useServerFn(userAction);
   const unbanUserFn = useServerFn(unbanUser);
+  const impersonateUserFn = useServerFn(impersonateUser);
   const [banDialog, setBanDialog] = React.useState<{
     isOpen: boolean;
     userId?: string;
   }>({ isOpen: false });
-
-  const handleAction = async (
-    intent: string,
-    userId: string,
-    banReason?: string,
-  ) => {
-    const result = await actionFn({
-      data:
-        intent === "ban"
-          ? { intent: "ban" as const, userId, banReason: banReason ?? "" }
-          : intent === "unban"
-            ? { intent: "unban" as const, userId }
-            : { intent: "impersonate" as const, userId },
-    });
-    if ("_redirect" in result) {
-      throw result._redirect;
-    }
-    void router.invalidate();
-  };
 
   return (
     <div className="flex flex-col gap-8 p-6">
@@ -271,12 +198,9 @@ function RouteComponent() {
                     {user.banned ? (
                       <DropdownMenuItem
                         onClick={() => {
-                          void (async () => {
-                            await unbanUserFn({
-                              data: { userId: String(user.userId) },
-                            });
-                            await router.invalidate();
-                          })();
+                          void unbanUserFn({
+                            data: { userId: String(user.userId) },
+                          }).then(() => router.invalidate());
                         }}
                       >
                         Unban
@@ -295,7 +219,9 @@ function RouteComponent() {
                     )}
                     <DropdownMenuItem
                       onClick={() => {
-                        void handleAction("impersonate", String(user.userId));
+                        void impersonateUserFn({
+                          data: { userId: String(user.userId) },
+                        });
                       }}
                     >
                       Impersonate
@@ -321,9 +247,6 @@ function RouteComponent() {
                 : { isOpen: false, userId: undefined },
           );
         }}
-        // onSubmit={({ userId, banReason }) => {
-        //   void handleAction("ban", userId, banReason);
-        // }}
       />
     </div>
   );
@@ -339,14 +262,13 @@ function BanDialog({
   onOpenChange: (isOpen: boolean) => void;
 }) {
   const router = useRouter();
-
   const actionServerFn = useServerFn(banUser);
   const action = useMutation({
     mutationFn: async (data: z.input<typeof banUserSchema>) =>
       actionServerFn({ data }),
     onSuccess: (result) => {
       if (result.success) {
-        void onOpenChange(false);
+        onOpenChange(false);
         void router.invalidate();
       } else {
         form.setErrorMap(result.errorMap);
@@ -408,7 +330,6 @@ function BanDialog({
                 )
               }
             </form.Subscribe>
-
             <form.Field
               name="banReason"
               children={(field) => {
@@ -447,19 +368,14 @@ function BanDialog({
           >
             Cancel
           </Button>
-          <form.Subscribe
-            selector={(formState) => [
-              formState.canSubmit,
-              formState.isSubmitting,
-            ]}
-          >
-            {([canSubmit, isSubmitting]) => (
+          <form.Subscribe selector={(formState) => formState.canSubmit}>
+            {(canSubmit) => (
               <Button
                 type="submit"
                 form="ban-form"
-                disabled={!canSubmit || isSubmitting || action.isPending}
+                disabled={!canSubmit || action.isPending}
               >
-                {isSubmitting || action.isPending ? "..." : "Ban"}
+                {action.isPending ? "..." : "Ban"}
               </Button>
             )}
           </form.Subscribe>
