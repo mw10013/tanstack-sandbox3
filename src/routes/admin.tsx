@@ -92,6 +92,12 @@ function AppSidebar({ user }: { user: { email: string } }) {
                   render={<Link to="/admin">Dashboard</Link>}
                 />
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={Boolean(matchRoute({ to: "/admin/users" }))}
+                  render={<Link to="/admin/users">Users</Link>}
+                />
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

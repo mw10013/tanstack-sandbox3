@@ -1,7 +1,6 @@
 import {
   createFileRoute,
   Link,
-  notFound,
   Outlet,
   redirect,
   useMatchRoute,
