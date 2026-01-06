@@ -20,16 +20,16 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
-const schema = z.object({
+const actionSchema = z.object({
   email: z.email(),
 });
 
 export const actionServerFn = createServerFn({
   method: "POST",
 })
-  .inputValidator((data: z.input<typeof schema>) => data)
+  .inputValidator((data: z.input<typeof actionSchema>) => data)
   .handler(async ({ data, context: { authService, env } }) => {
-    const parseResult = schema.safeParse(data);
+    const parseResult = actionSchema.safeParse(data);
     if (!parseResult.success) {
       const { formErrors, fieldErrors } = z.flattenError(parseResult.error);
       const errorMap = {
@@ -74,7 +74,7 @@ export const Route = createFileRoute("/login")({
 function RouteComponent() {
   const actionFn = useServerFn(actionServerFn);
   const action = useMutation({
-    mutationFn: async (data: z.input<typeof schema>) => actionFn({ data }),
+    mutationFn: async (data: z.input<typeof actionSchema>) => actionFn({ data }),
     onSuccess: (result) => {
       if (!result.success) {
         form.setErrorMap(result.errorMap);
@@ -144,7 +144,7 @@ function RouteComponent() {
                       <Input
                         id={field.name}
                         name={field.name}
-                        type="email"
+                        // type="email"
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => {
@@ -173,11 +173,9 @@ function RouteComponent() {
                     disabled={!canSubmit || action.isPending}
                     className="w-full"
                   >
-                    {action.isPending
-                      ? "Sending..."
-                      : isSubmitting
-                        ? "..."
-                        : "Send magic link"}
+                    {isSubmitting || action.isPending
+                      ? "..."
+                      : "Send magic link"}
                   </Button>
                 )}
               </form.Subscribe>
