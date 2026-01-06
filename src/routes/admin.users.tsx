@@ -2,6 +2,7 @@ import * as React from "react";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,12 +67,12 @@ export const unbanUser = createServerFn({ method: "POST" })
   .inputValidator((data: { userId: string }) =>
     z.object({ userId: z.string() }).parse(data),
   )
-  .handler(async ({ data, context: { env } }) => {
-    await env.D1.prepare(
-      "update User set banned = 0, banReason = null, banExpires = null where userId = ?1",
-    )
-      .bind(data.userId)
-      .run();
+  .handler(async ({ data, context: { authService } }) => {
+    const request = getRequest();
+    await authService.api.unbanUser({
+      headers: request.headers,
+      body: { userId: data.userId },
+    });
     return { success: true };
   });
 
