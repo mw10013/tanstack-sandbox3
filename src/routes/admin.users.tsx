@@ -4,7 +4,12 @@ import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { AlertCircle } from "lucide-react";
+import {
+  AlertCircle,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  Search,
+} from "lucide-react";
 import { z } from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -30,6 +35,19 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
   Table,
   TableBody,
   TableCell,
@@ -38,28 +56,36 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const LIMIT = 10;
+const LIMIT = 5;
 
 const banUserSchema = z.object({
   userId: z.string(),
   banReason: z.string().max(100),
 });
 
-export const getUsers = createServerFn({ method: "GET" }).handler(
-  async ({ context: { repository } }) => {
+export const getUsers = createServerFn({ method: "GET" })
+  .inputValidator(
+    z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      filter: z.string().trim().optional(),
+    }),
+  )
+  .handler(async ({ data, context: { repository } }) => {
+    const { page, filter } = data;
+    const offset = (page - 1) * LIMIT;
     const result = await repository.getUsers({
       limit: LIMIT,
-      offset: 0,
+      offset,
+      searchValue: filter && filter !== "" ? filter : undefined,
     });
     const pageCount = Math.max(1, Math.ceil(result.count / LIMIT));
     return {
       users: result.users,
-      page: 1,
+      page,
       pageCount,
-      filter: "",
+      filter,
     };
-  },
-);
+  });
 
 export const banUser = createServerFn({ method: "POST" })
   .inputValidator((data: z.input<typeof banUserSchema>) => data)
@@ -130,7 +156,25 @@ export const impersonateUser = createServerFn({ method: "POST" })
   });
 
 export const Route = createFileRoute("/admin/users")({
-  loader: () => getUsers(),
+  validateSearch: (search) => {
+    const schema = z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      filter: z.string().trim().optional(),
+    });
+    return schema.parse(search);
+  },
+  loaderDeps: ({ search }) => ({ page: search.page, filter: search.filter }),
+  loader: async ({ deps }) => {
+    const result = await getUsers({ data: deps });
+    if (deps.page > result.pageCount) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
+      throw redirect({
+        to: "/admin/users",
+        search: { page: result.pageCount, filter: deps.filter },
+      });
+    }
+    return result;
+  },
   component: RouteComponent,
 });
 
@@ -143,6 +187,19 @@ function RouteComponent() {
     isOpen: boolean;
     userId?: string;
   }>({ isOpen: false });
+  const search = Route.useSearch();
+
+  const handleFilterSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const filter = formData.get("filter");
+    if (typeof filter === "string") {
+      void router.navigate({
+        to: "/admin/users",
+        search: { filter, page: 1 },
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-8 p-6">
@@ -152,6 +209,20 @@ function RouteComponent() {
           Manage your users and roles.
         </p>
       </header>
+
+      <form onSubmit={handleFilterSubmit}>
+        <InputGroup>
+          <InputGroupInput
+            name="filter"
+            defaultValue={search.filter ?? ""}
+            placeholder="Filter by email..."
+            aria-label="Filter by email"
+          />
+          <InputGroupAddon>
+            <Search className="size-4" />
+          </InputGroupAddon>
+        </InputGroup>
+      </form>
 
       <Table>
         <TableHeader>
@@ -229,6 +300,75 @@ function RouteComponent() {
           ))}
         </TableBody>
       </Table>
+
+      {data.pageCount > 1 && (
+        <Pagination>
+          <PaginationContent>
+            {data.page > 1 ? (
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => {
+                    void router.navigate({
+                      to: "/admin/users",
+                      search: {
+                        page: data.page - 1,
+                        filter: search.filter,
+                      },
+                    });
+                  }}
+                />
+              </PaginationItem>
+            ) : (
+              <PaginationItem>
+                <span className="text-muted-foreground h-9 px-4 py-2 inline-flex items-center">
+                  <ChevronLeftIcon className="size-4 mr-1" />
+                  <span className="hidden sm:inline">Previous</span>
+                </span>
+              </PaginationItem>
+            )}
+            {Array.from({ length: data.pageCount }, (_, i) => {
+              const page = i + 1;
+              return (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    onClick={() => {
+                      void router.navigate({
+                        to: "/admin/users",
+                        search: { page, filter: search.filter },
+                      });
+                    }}
+                    isActive={page === data.page}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
+            {data.page < data.pageCount ? (
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => {
+                    void router.navigate({
+                      to: "/admin/users",
+                      search: {
+                        page: data.page + 1,
+                        filter: search.filter,
+                      },
+                    });
+                  }}
+                />
+              </PaginationItem>
+            ) : (
+              <PaginationItem>
+                <span className="text-muted-foreground h-9 px-4 py-2 inline-flex items-center">
+                  <span className="hidden sm:inline">Next</span>
+                  <ChevronRightIcon className="size-4 ml-1" />
+                </span>
+              </PaginationItem>
+            )}
+          </PaginationContent>
+        </Pagination>
+      )}
 
       <BanDialog
         key={banDialog.userId}

@@ -95,7 +95,11 @@ function AppSidebar({ user }: { user: { email: string } }) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   isActive={Boolean(matchRoute({ to: "/admin/users" }))}
-                  render={<Link to="/admin/users">Users</Link>}
+                  render={
+                    <Link to="/admin/users" search={{ page: 1 }}>
+                      Users
+                    </Link>
+                  }
                 />
               </SidebarMenuItem>
             </SidebarMenu>
