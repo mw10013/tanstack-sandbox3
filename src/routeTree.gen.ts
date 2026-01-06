@@ -18,6 +18,9 @@ import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as MktIndexRouteImport } from './routes/_mkt.index'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
+import { Route as AdminSessionsRouteImport } from './routes/admin.sessions'
+import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const MagicLinkRoute = MagicLinkRouteImport.update({
@@ -64,6 +67,21 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSessionsRoute = AdminSessionsRouteImport.update({
+  id: '/sessions',
+  path: '/sessions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -75,6 +93,9 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/magic-link': typeof MagicLinkRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/sessions': typeof AdminSessionsRoute
+  '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/': typeof MktIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -84,6 +105,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/magic-link': typeof MagicLinkRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/sessions': typeof AdminSessionsRoute
+  '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/': typeof MktIndexRoute
   '/admin': typeof AdminIndexRoute
@@ -97,6 +121,9 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/magic-link': typeof MagicLinkRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/sessions': typeof AdminSessionsRoute
+  '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/_mkt/': typeof MktIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -110,6 +137,9 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/magic-link'
+    | '/admin/customers'
+    | '/admin/sessions'
+    | '/admin/subscriptions'
     | '/admin/users'
     | '/'
     | '/admin/'
@@ -119,6 +149,9 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/magic-link'
+    | '/admin/customers'
+    | '/admin/sessions'
+    | '/admin/subscriptions'
     | '/admin/users'
     | '/'
     | '/admin'
@@ -131,6 +164,9 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/magic-link'
+    | '/admin/customers'
+    | '/admin/sessions'
+    | '/admin/subscriptions'
     | '/admin/users'
     | '/_mkt/'
     | '/admin/'
@@ -212,6 +248,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/subscriptions': {
+      id: '/admin/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/admin/subscriptions'
+      preLoaderRoute: typeof AdminSubscriptionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sessions': {
+      id: '/admin/sessions'
+      path: '/sessions'
+      fullPath: '/admin/sessions'
+      preLoaderRoute: typeof AdminSessionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/customers': {
+      id: '/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -233,11 +290,17 @@ const MktRouteChildren: MktRouteChildren = {
 const MktRouteWithChildren = MktRoute._addFileChildren(MktRouteChildren)
 
 interface AdminRouteChildren {
+  AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminSessionsRoute: typeof AdminSessionsRoute
+  AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminCustomersRoute: AdminCustomersRoute,
+  AdminSessionsRoute: AdminSessionsRoute,
+  AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }

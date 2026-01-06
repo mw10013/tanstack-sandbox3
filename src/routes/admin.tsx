@@ -102,6 +102,36 @@ function AppSidebar({ user }: { user: { email: string } }) {
                   }
                 />
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={Boolean(matchRoute({ to: "/admin/customers" }))}
+                  render={
+                    <Link to="/admin/customers" search={{ page: 1 }}>
+                      Customers
+                    </Link>
+                  }
+                />
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={Boolean(matchRoute({ to: "/admin/subscriptions" }))}
+                  render={
+                    <Link to="/admin/subscriptions" search={{ page: 1 }}>
+                      Subscriptions
+                    </Link>
+                  }
+                />
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={Boolean(matchRoute({ to: "/admin/sessions" }))}
+                  render={
+                    <Link to="/admin/sessions" search={{ page: 1 }}>
+                      Sessions
+                    </Link>
+                  }
+                />
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
