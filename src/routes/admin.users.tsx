@@ -80,8 +80,6 @@ export const banUser = createServerFn({ method: "POST" })
       };
       return { success: false, errorMap };
     }
-    console.log(`banUser: willBan: ${JSON.stringify(parseResult.data)}`);
-
     try {
       const request = getRequest();
       await authService.api.banUser({
@@ -92,7 +90,6 @@ export const banUser = createServerFn({ method: "POST" })
         },
       });
     } catch (error: unknown) {
-      console.error("Error banning user:", error);
       return {
         success: false,
         errorMap: {
@@ -105,7 +102,6 @@ export const banUser = createServerFn({ method: "POST" })
         },
       };
     }
-    console.log(`banUser: didBan: ${JSON.stringify(parseResult.data)}`);
     return { success: true };
   });
 
@@ -312,24 +308,15 @@ function BanDialog({
           }}
         >
           <FieldGroup>
-            <form.Subscribe selector={(formState) => formState.errors}>
-              {(formErrors) =>
-                formErrors.length > 0 && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="size-4" />
-                    <AlertTitle>Form Errors</AlertTitle>
-                    <AlertDescription>
-                      <ul className="ml-4 flex list-disc flex-col gap-1">
-                        {formErrors.map(
-                          (error, index) =>
-                            error && <li key={index}>{error}</li>,
-                        )}
-                      </ul>
-                    </AlertDescription>
-                  </Alert>
-                )
-              }
-            </form.Subscribe>
+            {action.data?.errorMap && (
+              <Alert variant="destructive">
+                <AlertCircle className="size-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  {action.data.errorMap.onSubmit.form}
+                </AlertDescription>
+              </Alert>
+            )}
             <form.Field
               name="banReason"
               children={(field) => {
