@@ -65,12 +65,13 @@ Our project already has:
 - `session` property in `ServerContext` (worker.ts:14)
 - `session` populated in worker.ts (line 36-38)
 - Basic app route structure with `/app` and `/app/`
+- `/app.tsx` has beforeLoad that checks session authentication
 
 ### What's Missing
 
 - `organization` and `organizations` properties in `ServerContext`
 - Route structure to handle `/app/:organizationId` URLs
-- beforeLoad logic to populate organization context
+- Organization-scoped layout route with beforeLoad to populate organization context
 - Redirect logic for `/app/` to use `activeOrganizationId`
 
 ---
@@ -81,7 +82,7 @@ Our project already has:
 
 **File:** `src/worker.ts`
 
-Add organization properties to the existing `ServerContext` interface:
+Add organization properties to existing `ServerContext` interface:
 
 ```typescript
 export interface ServerContext {
@@ -95,22 +96,13 @@ export interface ServerContext {
 }
 ```
 
-**Question for user:** Should `organization` and `organizations` be populated in worker.ts like `session` is, or should they only be populated in route-level `beforeLoad` hooks?
-
-**Analysis:**
-
-- Populating in worker: Fetches organizations for every request (even routes that don't need them)
-- Populating in route `beforeLoad`: Only fetches when needed (better for performance)
-
-**Recommendation:** Populate in route-level `beforeLoad` for organization-scoped routes only.
+**Note:** `organization` and `organizations` will be populated in route-level `beforeLoad` hooks, not in worker.ts. This is more performant as it only fetches when needed.
 
 ---
 
 ### Phase 2: Create App Layout Route Structure
 
-Based on TanStack Router's file naming conventions, we have two options:
-
-**Option A: Flat route structure**
+Use flat route structure (as in crrbuis):
 
 ```
 src/routes/
@@ -122,28 +114,11 @@ src/routes/
   app.$organizationId.billing.tsx       # /app/:organizationId/billing (future)
 ```
 
-**Option B: Directory route structure**
+**Advantages:**
 
-```
-src/routes/
-  app.tsx                          # /app (existing layout route)
-  app/
-    _index.tsx                     # /app/ (existing, move)
-    $organizationId.tsx             # /app/:organizationId (new layout)
-    $organizationId/
-      _index.tsx                   # /app/:organizationId/ (new)
-      members.tsx                  # /app/:organizationId/members (future)
-      billing.tsx                 # /app/:organizationId/billing (future)
-```
-
-**Question for user:** Which structure do you prefer?
-
-**Analysis:**
-
-- Option A (flat): Fewer directory levels, easier to see all app routes at a glance
-- Option B (directory): Better organization as number of org routes grows
-
-**Recommendation:** Option A (flat) for now, as crrbuis uses this pattern and it scales well.
+- Fewer directory levels
+- Easier to see all app routes at a glance
+- Matches crrbuis pattern for consistency
 
 ---
 
@@ -154,47 +129,74 @@ src/routes/
 Add logic to redirect users to their active organization:
 
 ```typescript
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { invariant } from "@epic-web/invariant";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/app/")({
-  beforeLoad: async ({ context: { session } }) => {
-    if (!session?.user) {
-      throw redirect({ to: "/login" });
-    }
+  beforeLoad: ({ context: { session } }) => {
+    invariant(
+      session?.user,
+      "Session must be present (checked by parent route)",
+    );
+
+    invariant(session.session, "Session data must be present");
 
     const activeOrganizationId = session.session.activeOrganizationId;
 
-    if (activeOrganizationId) {
-      throw redirect({ to: `/app/${activeOrganizationId}` });
-    }
+    invariant(
+      activeOrganizationId,
+      "Active organization ID must be present (auto-created on sign-up)",
+    );
 
-    // User has no organizations - show creation flow or error
-    return {
-      needsOrgCreation: true,
-    };
+    throw redirect({ to: `/app/${activeOrganizationId}` });
   },
-  component: RouteComponent,
 });
-
-function RouteComponent() {
-  const { needsOrgCreation } = Route.useRouteContext();
-
-  if (needsOrgCreation) {
-    return <div className="p-6">No organizations found. Create one to get started.</div>;
-  }
-
-  return null; // Will never reach here due to redirect
-}
 ```
 
 **Key Points:**
 
-- Checks for authentication (redirect to `/login` if not)
-- Uses `activeOrganizationId` from session (populated by Better Auth's session create hook)
-- Redirects to organization-specific URL if active org exists
-- Shows creation flow if user has no organizations
+- **Session invariant**: Parent `/app.tsx` route already checks authentication, so session is guaranteed. Using `invariant()` makes this explicit and narrows type from `session?` to `session`.
+- **activeOrganizationId invariant**: Organizations are auto-created on sign-up (see `src/lib/auth-service.ts:246-255`), so `activeOrganizationId` is guaranteed. Using `invariant()` makes this explicit.
+- **Always redirects**: No component function - this route only redirects to the user's active organization.
+- **No needsOrgCreation flow**: Since organizations are auto-created on sign-up, we never reach a state where a user has no organizations.
 
-**Question for user:** What should happen if a user has no organizations? In crrbuis, users get auto-created an organization on sign-up. Should we do the same?
+**Note on auto-creation:**
+
+In `src/lib/auth-service.ts:246-255`, the `databaseHookUserCreateAfter` hook creates an organization for new users with `role === "user"`:
+
+```typescript
+databaseHookUserCreateAfter: async (user) => {
+  if (user.role === "user") {
+    await auth.api.createOrganization({
+      body: {
+        name: `${user.email.charAt(0).toUpperCase() + user.email.slice(1)}'s Organization`,
+        slug: user.email.replace(/[^a-z0-9]/g, "-").toLowerCase(),
+        userId: user.id,
+      },
+    });
+  }
+},
+```
+
+And in `databaseHookSessionCreateBefore` (lines 257-271), the session is populated with the user's active organization ID:
+
+```typescript
+databaseHookSessionCreateBefore: async (session) => {
+  const activeOrganizationId =
+    (await options.db
+      .prepare(
+        "select organizationId from Member where userId = ? and role = 'owner'",
+      )
+      .bind(session.userId)
+      .first<number>("organizationId")) ?? undefined;
+  return {
+    data: {
+      ...session,
+      activeOrganizationId,
+    },
+  };
+},
+```
 
 ---
 
@@ -205,26 +207,28 @@ function RouteComponent() {
 Create a layout route that populates organization context:
 
 ```typescript
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, notFound } from "@tanstack/react-router";
+import { getRequest } from "@tanstack/react-start/server";
+import { invariant } from "@epic-web/invariant";
 
 export const Route = createFileRoute("/app/$organizationId")({
   beforeLoad: async ({
     context: { session, authService },
     params: { organizationId },
   }) => {
-    if (!session?.user) {
-      throw redirect({ to: "/login" });
-    }
+    invariant(session?.user, "Session must be present (checked by parent route)");
+
+    invariant(session.session, "Session data must be present");
+
+    const request = getRequest();
 
     const organizations = await authService.api.listOrganizations({
-      headers: new Headers(),
+      headers: request.headers,
     });
 
     const organization = organizations.find((org) => String(org.id) === organizationId);
 
-    if (!organization) {
-      throw redirect({ to: "/app" });
-    }
+    invariant(organization, "Organization not found or access denied");
 
     return {
       organization,
@@ -256,13 +260,26 @@ function RouteComponent() {
 
 **Key Points:**
 
-- `beforeLoad` runs before child routes' loaders (executes sequentially parent→child)
-- Fetches organizations using Better Auth API
-- Validates that user has access to requested organization
-- Returns organization context merged into route context
-- Child routes (`/app/:organizationId/`, `/app/:organizationId/members`, etc.) inherit this context
+- **`getRequest()`**: Imported from `@tanstack/react-start/server` to access the current request and its headers. This is already used in `src/lib/auth-service.ts:280`.
+- **Session invariant**: Parent `/app.tsx` route checks authentication, so using `invariant()` to make this explicit and narrow type.
+- **Organization invariant**: If organization is not found in user's accessible organizations, use `invariant()` to throw an error. This will be caught by error boundaries.
+- **Context merging**: Returned values (`organization`, `organizations`, `sessionUser`) are merged into route context and available to child routes.
+- **Sequential execution**: `beforeLoad` runs sequentially from parent to child, so child routes (`/app/:organizationId/`, `/app/:organizationId/members`) can safely access this context.
 
-**Question for user:** How should we get headers for the `listOrganizations` call? In TanStack Start server functions, we need access to the request headers. I see in crrbuis they use `request.headers` from route loader args, but in `beforeLoad` we don't have direct access to headers. Need to research this.
+**Alternative - use notFound():**
+
+```typescript
+if (!organization) {
+  throw notFound();
+}
+```
+
+This would render the `notFoundComponent` (defined in `__root.tsx`). Choose between:
+
+- `invariant()`: Throws with explicit message, good for debugging
+- `notFound()`: Renders 404 page, better UX for end users
+
+**Question for user:** Should we use `invariant()` or `notFound()` when organization is not found?
 
 ---
 
@@ -270,7 +287,7 @@ function RouteComponent() {
 
 **File:** `src/routes/app.$organizationId._index.tsx` (new)
 
-Create the organization dashboard page:
+Create organization dashboard page:
 
 ```typescript
 import { createFileRoute } from "@tanstack/react-router";
@@ -295,6 +312,12 @@ function RouteComponent() {
 }
 ```
 
+**Key Points:**
+
+- Organization is guaranteed to be present (invariant in parent layout route)
+- No loader needed for basic page - can add one later for dashboard data
+- Can add more routes like `/app/$organizationId/members.tsx`, `/app/$organizationId/billing.tsx` as needed
+
 ---
 
 ## TanStack Start Context Pattern
@@ -306,6 +329,16 @@ In TanStack Start, context is established through module augmentation:
 **In `src/worker.ts`:**
 
 ```typescript
+export interface ServerContext {
+  env: Env;
+  repository: Repository;
+  authService: AuthService;
+  stripeService: StripeService;
+  session?: AuthService["$Infer"]["Session"];
+  organization?: AuthService["$Infer"]["Organization"];
+  organizations?: AuthService["$Infer"]["Organization"][];
+}
+
 declare module "@tanstack/react-start" {
   interface Register {
     server: { requestContext: ServerContext };
@@ -313,10 +346,10 @@ declare module "@tanstack/react-start" {
 }
 ```
 
-**In routes:** Access context via `Route.useRouteContext()`:
+**In routes:** Access context via `Route.useRouteContext()`
 
 ```typescript
-const { session, organization } = Route.useRouteContext();
+const { session, organization, organizations } = Route.useRouteContext();
 ```
 
 ### beforeLoad vs loader
@@ -336,24 +369,70 @@ Based on TanStack Router documentation and AGENTS.md:
   - Session validation (redirect if not authenticated)
   - Organization authorization (fetch and validate membership)
   - Context population (session, organization, organizations)
+  - Using `invariant()` to make preconditions explicit and narrow types
 - Use `loader` for:
   - Route-specific data fetching (dashboard stats, member lists, etc.)
   - Data that varies between routes under the same organization
+
+### Using invariant()
+
+The `invariant()` function (from `@epic-web/invariant`) serves two purposes:
+
+1. **Runtime safety**: Throws an error if the condition is false
+2. **Type narrowing**: TypeScript narrows the type based on the invariant condition
+
+Examples:
+
+```typescript
+invariant(session?.user, "Session must be present");
+// Type of session is narrowed from `session?` to `session`
+
+invariant(activeOrganizationId, "Active organization ID must be present");
+// Type of activeOrganizationId is narrowed from `string | undefined` to `string`
+```
+
+This pattern is more explicit than optional chaining (`?.`) and provides better error messages when invariants fail.
+
+### Accessing Request Headers in beforeLoad
+
+To access request headers in `beforeLoad`, use `getRequest()` from `@tanstack/react-start/server`:
+
+```typescript
+import { getRequest } from "@tanstack/react-start/server";
+
+export const Route = createFileRoute("/app/$organizationId")({
+  beforeLoad: async () => {
+    const request = getRequest();
+    const headers = request.headers;
+
+    // Use headers with Better Auth API
+    const session = await authService.api.getSession({ headers });
+  },
+});
+```
+
+This pattern is already used in `src/lib/auth-service.ts:280`:
+
+```typescript
+export const signOutServerFn = createServerFn({ method: "POST" }).handler(
+  async ({ context: { authService } }) => {
+    const request = getRequest();
+    const { headers } = await authService.api.signOut({
+      headers: request.headers,
+      returnHeaders: true,
+    });
+    // ...
+  },
+);
+```
 
 ---
 
 ## Questions for User
 
-1. **Context Population Location**: Should `organization` and `organizations` be populated in `worker.ts` (global) or route `beforeLoad` (scoped)?
-
-2. **Route Structure Preference**: Do you prefer flat routes (`app.$organizationId._index.tsx`) or directory routes (`app/$organizationId/_index.tsx`)?
-
-3. **No Organizations Flow**: What should happen if a user signs in but has no organizations?
-   - Auto-create (like crrbuis)?
-   - Show creation UI?
-   - Error message?
-
-4. **Headers Access in beforeLoad**: How do we access request headers in `beforeLoad` for the `listOrganizations` call? Need to verify TanStack Start pattern for this.
+1. **Organization not found**: Should we use `invariant()` or `notFound()` when organization is not found?
+   - `invariant()`: Throws with explicit message (good for debugging)
+   - `notFound()`: Renders 404 page (better UX for end users)
 
 ---
 
@@ -376,6 +455,6 @@ Based on TanStack Router documentation and AGENTS.md:
 ### Current Project
 
 - `src/worker.ts` - Server context definition and population
-- `src/routes/app.tsx` - Existing app layout route
+- `src/routes/app.tsx` - Existing app layout route with auth check
 - `src/routes/app.index.tsx` - Existing app index route
-- `src/lib/auth-service.ts` - Better Auth configuration
+- `src/lib/auth-service.ts` - Better Auth configuration (auto-creates org on sign-up)
