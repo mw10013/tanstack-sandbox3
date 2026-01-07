@@ -107,9 +107,9 @@ Use flat route structure (as in crrbuis):
 ```
 src/routes/
   app.tsx                          # /app (existing layout route)
-  app._index.tsx                     # /app/ (existing, needs update)
+  app.index.tsx                     # /app/ (existing, needs update)
   app.$organizationId.tsx              # /app/:organizationId (new layout)
-  app.$organizationId._index.tsx       # /app/:organizationId/ (new)
+  app.$organizationId.index.tsx       # /app/:organizationId/ (new)
   app.$organizationId.members.tsx        # /app/:organizationId/members (future)
   app.$organizationId.billing.tsx       # /app/:organizationId/billing (future)
 ```
@@ -124,7 +124,7 @@ src/routes/
 
 ### Phase 3: Update `/app/` Index Route
 
-**File:** `src/routes/app._index.tsx`
+**File:** `src/routes/app.index.tsx`
 
 Add logic to redirect users to their active organization:
 
@@ -196,15 +196,16 @@ databaseHookSessionCreateBefore: async (session) => {
 
 **File:** `src/routes/app.$organizationId.tsx` (new)
 
-Create a layout route that populates organization context:
+Create a layout route that populates organization context using a server function:
 
 ```typescript
 import { createFileRoute, Outlet, notFound } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { invariant } from "@epic-web/invariant";
 
-export const Route = createFileRoute("/app/$organizationId")({
-  beforeLoad: async ({
+const beforeLoadServerFn = createServerFn().handler(
+  async ({
     context: { session, authService },
     params: { organizationId },
   }) => {
@@ -227,6 +228,12 @@ export const Route = createFileRoute("/app/$organizationId")({
       organizations,
       sessionUser: session.user,
     };
+  },
+);
+
+export const Route = createFileRoute("/app/$organizationId")({
+  beforeLoad: async ({ params }) => {
+    return await beforeLoadServerFn({ params });
   },
   component: RouteComponent,
 });
@@ -262,7 +269,7 @@ function RouteComponent() {
 
 ### Phase 5: Create Organization Index Route
 
-**File:** `src/routes/app.$organizationId._index.tsx` (new)
+**File:** `src/routes/app.$organizationId.index.tsx` (new)
 
 Create organization dashboard page:
 
@@ -427,5 +434,5 @@ export const signOutServerFn = createServerFn({ method: "POST" }).handler(
 
 - `src/worker.ts` - Server context definition and population
 - `src/routes/app.tsx` - Existing app layout route with auth check
-- `src/routes/app.index.tsx` - Existing app index route
+- `src/routes/app.index.tsx` - Existing app index route (renamed from app.\_index.tsx per TanStack convention)
 - `src/lib/auth-service.ts` - Better Auth configuration (auto-creates org on sign-up)
