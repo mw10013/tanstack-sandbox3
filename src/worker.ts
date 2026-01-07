@@ -12,6 +12,8 @@ export interface ServerContext {
   authService: AuthService;
   stripeService: StripeService;
   session?: AuthService["$Infer"]["Session"];
+  organization?: AuthService["$Infer"]["Organization"];
+  organizations?: AuthService["$Infer"]["Organization"][];
 }
 
 declare module "@tanstack/react-start" {
