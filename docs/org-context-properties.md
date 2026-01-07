@@ -130,23 +130,15 @@ Add logic to redirect users to their active organization:
 
 ```typescript
 import { invariant } from "@epic-web/invariant";
-import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/app/")({
   beforeLoad: ({ context: { session } }) => {
-    invariant(
-      session?.user,
-      "Session must be present (checked by parent route)",
-    );
-
-    invariant(session.session, "Session data must be present");
+    invariant(session, "Missing session");
 
     const activeOrganizationId = session.session.activeOrganizationId;
 
-    invariant(
-      activeOrganizationId,
-      "Active organization ID must be present (auto-created on sign-up)",
-    );
+    invariant(activeOrganizationId, "Missing activeOrganizationId");
 
     throw redirect({ to: `/app/${activeOrganizationId}` });
   },
@@ -155,14 +147,14 @@ export const Route = createFileRoute("/app/")({
 
 **Key Points:**
 
-- **Session invariant**: Parent `/app.tsx` route already checks authentication, so session is guaranteed. Using `invariant()` makes this explicit and narrows type from `session?` to `session`.
-- **activeOrganizationId invariant**: Organizations are auto-created on sign-up (see `src/lib/auth-service.ts:246-255`), so `activeOrganizationId` is guaranteed. Using `invariant()` makes this explicit.
-- **Always redirects**: No component function - this route only redirects to the user's active organization.
+- **Session invariant**: Parent `/app.tsx` route already checks authentication, so session is guaranteed. Single `invariant(session, "Missing session")` is sufficient - TypeScript will ensure session.session exists after this check.
+- **activeOrganizationId invariant**: Organizations are auto-created on sign-up (see `src/lib/auth-service.ts:246-255`), so `activeOrganizationId` is guaranteed.
+- **Always redirects**: No component function - this route only redirects to user's active organization.
 - **No needsOrgCreation flow**: Since organizations are auto-created on sign-up, we never reach a state where a user has no organizations.
 
 **Note on auto-creation:**
 
-In `src/lib/auth-service.ts:246-255`, the `databaseHookUserCreateAfter` hook creates an organization for new users with `role === "user"`:
+In `src/lib/auth-service.ts:246-255`, `databaseHookUserCreateAfter` hook creates an organization for new users with `role === "user"`:
 
 ```typescript
 databaseHookUserCreateAfter: async (user) => {
@@ -178,7 +170,7 @@ databaseHookUserCreateAfter: async (user) => {
 },
 ```
 
-And in `databaseHookSessionCreateBefore` (lines 257-271), the session is populated with the user's active organization ID:
+And in `databaseHookSessionCreateBefore` (lines 257-271), session is populated with user's active organization ID:
 
 ```typescript
 databaseHookSessionCreateBefore: async (session) => {
@@ -216,9 +208,7 @@ export const Route = createFileRoute("/app/$organizationId")({
     context: { session, authService },
     params: { organizationId },
   }) => {
-    invariant(session?.user, "Session must be present (checked by parent route)");
-
-    invariant(session.session, "Session data must be present");
+    invariant(session, "Missing session");
 
     const request = getRequest();
 
@@ -228,7 +218,9 @@ export const Route = createFileRoute("/app/$organizationId")({
 
     const organization = organizations.find((org) => String(org.id) === organizationId);
 
-    invariant(organization, "Organization not found or access denied");
+    if (!organization) {
+      throw notFound();
+    }
 
     return {
       organization,
@@ -261,25 +253,10 @@ function RouteComponent() {
 **Key Points:**
 
 - **`getRequest()`**: Imported from `@tanstack/react-start/server` to access the current request and its headers. This is already used in `src/lib/auth-service.ts:280`.
-- **Session invariant**: Parent `/app.tsx` route checks authentication, so using `invariant()` to make this explicit and narrow type.
-- **Organization invariant**: If organization is not found in user's accessible organizations, use `invariant()` to throw an error. This will be caught by error boundaries.
+- **Session invariant**: Parent `/app.tsx` route checks authentication, so using `invariant(session, "Missing session")` ensures session is present. TypeScript will then ensure session.user and session.session exist.
+- **notFound() for organization**: If organization is not found in user's accessible organizations, use `notFound()` rather than `invariant()`. User can legitimately be removed from an organization or the organization ID could be invalid, so rendering a 404 page is appropriate.
 - **Context merging**: Returned values (`organization`, `organizations`, `sessionUser`) are merged into route context and available to child routes.
 - **Sequential execution**: `beforeLoad` runs sequentially from parent to child, so child routes (`/app/:organizationId/`, `/app/:organizationId/members`) can safely access this context.
-
-**Alternative - use notFound():**
-
-```typescript
-if (!organization) {
-  throw notFound();
-}
-```
-
-This would render the `notFoundComponent` (defined in `__root.tsx`). Choose between:
-
-- `invariant()`: Throws with explicit message, good for debugging
-- `notFound()`: Renders 404 page, better UX for end users
-
-**Question for user:** Should we use `invariant()` or `notFound()` when organization is not found?
 
 ---
 
@@ -314,7 +291,7 @@ function RouteComponent() {
 
 **Key Points:**
 
-- Organization is guaranteed to be present (invariant in parent layout route)
+- Organization is guaranteed to be present (checked in parent layout route)
 - No loader needed for basic page - can add one later for dashboard data
 - Can add more routes like `/app/$organizationId/members.tsx`, `/app/$organizationId/billing.tsx` as needed
 
@@ -370,6 +347,7 @@ Based on TanStack Router documentation and AGENTS.md:
   - Organization authorization (fetch and validate membership)
   - Context population (session, organization, organizations)
   - Using `invariant()` to make preconditions explicit and narrow types
+  - Using `notFound()` for legitimate user errors (e.g., removed from org)
 - Use `loader` for:
   - Route-specific data fetching (dashboard stats, member lists, etc.)
   - Data that varies between routes under the same organization
@@ -384,14 +362,15 @@ The `invariant()` function (from `@epic-web/invariant`) serves two purposes:
 Examples:
 
 ```typescript
-invariant(session?.user, "Session must be present");
-// Type of session is narrowed from `session?` to `session`
+invariant(session, "Missing session");
+// Type of session is narrowed from `Session | undefined` to `Session`
+// TypeScript now knows session.session and session.user exist
 
-invariant(activeOrganizationId, "Active organization ID must be present");
+invariant(activeOrganizationId, "Missing activeOrganizationId");
 // Type of activeOrganizationId is narrowed from `string | undefined` to `string`
 ```
 
-This pattern is more explicit than optional chaining (`?.`) and provides better error messages when invariants fail.
+Keep invariant messages concise since they're program logic, not user-facing.
 
 ### Accessing Request Headers in beforeLoad
 
@@ -425,14 +404,6 @@ export const signOutServerFn = createServerFn({ method: "POST" }).handler(
   },
 );
 ```
-
----
-
-## Questions for User
-
-1. **Organization not found**: Should we use `invariant()` or `notFound()` when organization is not found?
-   - `invariant()`: Throws with explicit message (good for debugging)
-   - `notFound()`: Renders 404 page (better UX for end users)
 
 ---
 
