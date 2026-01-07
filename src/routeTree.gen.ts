@@ -17,10 +17,12 @@ import { Route as MktRouteImport } from './routes/_mkt'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as MktIndexRouteImport } from './routes/_mkt.index'
+import { Route as AppOrganizationIdRouteImport } from './routes/app.$organizationId'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
 import { Route as AdminSessionsRouteImport } from './routes/admin.sessions'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
+import { Route as AppOrganizationIdIndexRouteImport } from './routes/app.$organizationId.index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const MagicLinkRoute = MagicLinkRouteImport.update({
@@ -62,6 +64,11 @@ const MktIndexRoute = MktIndexRouteImport.update({
   path: '/',
   getParentRoute: () => MktRoute,
 } as any)
+const AppOrganizationIdRoute = AppOrganizationIdRouteImport.update({
+  id: '/$organizationId',
+  path: '/$organizationId',
+  getParentRoute: () => AppRoute,
+} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -82,6 +89,11 @@ const AdminCustomersRoute = AdminCustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => AdminRoute,
 } as any)
+const AppOrganizationIdIndexRoute = AppOrganizationIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppOrganizationIdRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -97,10 +109,12 @@ export interface FileRoutesByFullPath {
   '/admin/sessions': typeof AdminSessionsRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/app/$organizationId': typeof AppOrganizationIdRouteWithChildren
   '/': typeof MktIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/$organizationId/': typeof AppOrganizationIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -113,6 +127,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/$organizationId': typeof AppOrganizationIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -125,10 +140,12 @@ export interface FileRoutesById {
   '/admin/sessions': typeof AdminSessionsRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/app/$organizationId': typeof AppOrganizationIdRouteWithChildren
   '/_mkt/': typeof MktIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/$organizationId/': typeof AppOrganizationIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,10 +158,12 @@ export interface FileRouteTypes {
     | '/admin/sessions'
     | '/admin/subscriptions'
     | '/admin/users'
+    | '/app/$organizationId'
     | '/'
     | '/admin/'
     | '/app/'
     | '/api/auth/$'
+    | '/app/$organizationId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -157,6 +176,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/api/auth/$'
+    | '/app/$organizationId'
   id:
     | '__root__'
     | '/_mkt'
@@ -168,10 +188,12 @@ export interface FileRouteTypes {
     | '/admin/sessions'
     | '/admin/subscriptions'
     | '/admin/users'
+    | '/app/$organizationId'
     | '/_mkt/'
     | '/admin/'
     | '/app/'
     | '/api/auth/$'
+    | '/app/$organizationId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -241,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MktIndexRouteImport
       parentRoute: typeof MktRoute
     }
+    '/app/$organizationId': {
+      id: '/app/$organizationId'
+      path: '/$organizationId'
+      fullPath: '/app/$organizationId'
+      preLoaderRoute: typeof AppOrganizationIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/admin/users': {
       id: '/admin/users'
       path: '/users'
@@ -268,6 +297,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/customers'
       preLoaderRoute: typeof AdminCustomersRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/app/$organizationId/': {
+      id: '/app/$organizationId/'
+      path: '/'
+      fullPath: '/app/$organizationId/'
+      preLoaderRoute: typeof AppOrganizationIdIndexRouteImport
+      parentRoute: typeof AppOrganizationIdRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -307,11 +343,24 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface AppOrganizationIdRouteChildren {
+  AppOrganizationIdIndexRoute: typeof AppOrganizationIdIndexRoute
+}
+
+const AppOrganizationIdRouteChildren: AppOrganizationIdRouteChildren = {
+  AppOrganizationIdIndexRoute: AppOrganizationIdIndexRoute,
+}
+
+const AppOrganizationIdRouteWithChildren =
+  AppOrganizationIdRoute._addFileChildren(AppOrganizationIdRouteChildren)
+
 interface AppRouteChildren {
+  AppOrganizationIdRoute: typeof AppOrganizationIdRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppOrganizationIdRoute: AppOrganizationIdRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
 }
 
