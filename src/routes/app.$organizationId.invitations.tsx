@@ -45,13 +45,13 @@ const getLoaderData = createServerFn({ method: "GET" })
       await authService.api.hasPermission({
         headers: request.headers,
         body: {
-          organizationId: String(data.organizationId),
+          organizationId: data.organizationId,
           permissions: { invitation: ["create", "cancel"] },
         },
       });
     const invitations = await authService.api.listInvitations({
       headers: request.headers,
-      query: { organizationId: String(data.organizationId) },
+      query: { organizationId: data.organizationId },
     });
     return { canManageInvitations, invitations };
   });
