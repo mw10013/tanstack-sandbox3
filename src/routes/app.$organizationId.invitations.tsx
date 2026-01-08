@@ -86,7 +86,10 @@ const createInvitation = createServerFn({ method: "POST" })
     z.object({
       organizationId: z.coerce.number().int().positive(),
       email: z.email(),
-      role: Domain.MemberRole,
+      role: Domain.MemberRole.extract(
+        ["member", "admin"],
+        "Role must be Member or Admin.",
+      ),
     }),
   )
   .handler(async ({ data, context: { authService, repository } }) => {
@@ -124,8 +127,9 @@ const cancelInvitation = createServerFn({ method: "POST" })
 
 export const Route = createFileRoute("/app/$organizationId/invitations")({
   loader: async ({ params }) => {
-    const organizationId = Number(params.organizationId);
-    const result = await getLoaderData({ data: { organizationId } });
+    const result = await getLoaderData({
+      data: { organizationId: params.organizationId },
+    });
     return result;
   },
   component: RouteComponent,
@@ -214,7 +218,7 @@ function InviteForm({ organizationId }: { organizationId: number }) {
   const form = useForm({
     defaultValues: {
       emails: "",
-      role: "member" as Domain.MemberRole,
+      role: "member" as Extract<Domain.MemberRole, "member" | "admin">,
     },
     onSubmit: async ({ value }) => {
       setError(null);
