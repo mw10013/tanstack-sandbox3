@@ -23,6 +23,7 @@ import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscript
 import { Route as AdminSessionsRouteImport } from './routes/admin.sessions'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AppOrganizationIdIndexRouteImport } from './routes/app.$organizationId.index'
+import { Route as AppOrganizationIdInvitationsRouteImport } from './routes/app.$organizationId.invitations'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const MagicLinkRoute = MagicLinkRouteImport.update({
@@ -94,6 +95,12 @@ const AppOrganizationIdIndexRoute = AppOrganizationIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppOrganizationIdRoute,
 } as any)
+const AppOrganizationIdInvitationsRoute =
+  AppOrganizationIdInvitationsRouteImport.update({
+    id: '/invitations',
+    path: '/invitations',
+    getParentRoute: () => AppOrganizationIdRoute,
+  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -114,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/$organizationId/invitations': typeof AppOrganizationIdInvitationsRoute
   '/app/$organizationId/': typeof AppOrganizationIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -127,6 +135,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/$organizationId/invitations': typeof AppOrganizationIdInvitationsRoute
   '/app/$organizationId': typeof AppOrganizationIdIndexRoute
 }
 export interface FileRoutesById {
@@ -145,6 +154,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/$organizationId/invitations': typeof AppOrganizationIdInvitationsRoute
   '/app/$organizationId/': typeof AppOrganizationIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/api/auth/$'
+    | '/app/$organizationId/invitations'
     | '/app/$organizationId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/api/auth/$'
+    | '/app/$organizationId/invitations'
     | '/app/$organizationId'
   id:
     | '__root__'
@@ -193,6 +205,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/api/auth/$'
+    | '/app/$organizationId/invitations'
     | '/app/$organizationId/'
   fileRoutesById: FileRoutesById
 }
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrganizationIdIndexRouteImport
       parentRoute: typeof AppOrganizationIdRoute
     }
+    '/app/$organizationId/invitations': {
+      id: '/app/$organizationId/invitations'
+      path: '/invitations'
+      fullPath: '/app/$organizationId/invitations'
+      preLoaderRoute: typeof AppOrganizationIdInvitationsRouteImport
+      parentRoute: typeof AppOrganizationIdRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -344,10 +364,12 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface AppOrganizationIdRouteChildren {
+  AppOrganizationIdInvitationsRoute: typeof AppOrganizationIdInvitationsRoute
   AppOrganizationIdIndexRoute: typeof AppOrganizationIdIndexRoute
 }
 
 const AppOrganizationIdRouteChildren: AppOrganizationIdRouteChildren = {
+  AppOrganizationIdInvitationsRoute: AppOrganizationIdInvitationsRoute,
   AppOrganizationIdIndexRoute: AppOrganizationIdIndexRoute,
 }
 
