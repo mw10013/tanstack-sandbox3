@@ -4,7 +4,9 @@ import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
+import { AlertCircle } from "lucide-react";
 import * as z from "zod";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -36,6 +38,7 @@ import {
 import * as Domain from "@/lib/domain";
 
 const inviteSchema = z.object({
+  organizationId: z.number().int().positive(),
   emails: z
     .string()
     .transform((v) =>
@@ -81,35 +84,63 @@ const getLoaderData = createServerFn({ method: "GET" })
     return { canManageInvitations, invitations };
   });
 
-const createInvitation = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({
-      organizationId: z.coerce.number().int().positive(),
-      email: z.email(),
-      role: Domain.MemberRole.extract(
-        ["member", "admin"],
-        "Role must be Member or Admin.",
-      ),
-    }),
-  )
+const invite = createServerFn({ method: "POST" })
+  .inputValidator((data: z.input<typeof inviteSchema>) => data)
   .handler(async ({ data, context: { authService, repository } }) => {
-    const request = getRequest();
-    const result = await authService.api.createInvitation({
-      headers: request.headers,
-      body: {
-        email: data.email,
-        role: data.role,
-        organizationId: String(data.organizationId),
-        resend: true,
-      },
-    });
-    if (result.role !== data.role) {
-      await repository.updateInvitationRole({
-        invitationId: Number(result.id),
-        role: data.role,
-      });
+    const parseResult = inviteSchema.safeParse(data);
+    if (!parseResult.success) {
+      const { formErrors, fieldErrors } = z.flattenError(parseResult.error);
+      const errorMap = {
+        onSubmit: {
+          ...(formErrors.length > 0 ? { form: formErrors.join(", ") } : {}),
+          fields: Object.entries(fieldErrors).reduce<
+            Record<string, { message: string }[]>
+          >((acc, [key, messages]) => {
+            acc[key] = messages.map((message) => ({ message }));
+            return acc;
+          }, {}),
+        },
+      };
+      return { success: false, errorMap };
     }
-    return { success: true };
+    try {
+      const request = getRequest();
+      for (const email of parseResult.data.emails) {
+        const result = await authService.api.createInvitation({
+          headers: request.headers,
+          body: {
+            email,
+            role: parseResult.data.role,
+            organizationId: String(parseResult.data.organizationId),
+            resend: true,
+          },
+        });
+        // Workaround for better-auth createInvitation role bug.
+        // Occurs when a pending invitation exists and a new invitation is created with a different role.
+        if (result.role !== parseResult.data.role) {
+          console.log(
+            `Applying workaround for better-auth createInvitation role bug: expected role ${parseResult.data.role}, got ${String(result.role)} for invitation ${String(result.id)}`,
+          );
+          await repository.updateInvitationRole({
+            invitationId: Number(result.id),
+            role: parseResult.data.role,
+          });
+        }
+      }
+      return { success: true };
+    } catch (error: unknown) {
+      return {
+        success: false,
+        errorMap: {
+          onSubmit: {
+            form: `Failed to invite: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+            fields: {},
+          },
+        },
+      };
+    }
   });
 
 const cancelInvitation = createServerFn({ method: "POST" })
@@ -186,32 +217,17 @@ function RouteComponent() {
 
 function InviteForm({ organizationId }: { organizationId: number }) {
   const router = useRouter();
-  const createInvitationServerFn = useServerFn(createInvitation);
-  const [error, setError] = React.useState<string | null>(null);
-  const createInvitationMutation = useMutation({
-    mutationFn: async (data: InviteFormValues) => {
-      const emails = data.emails
-        .split(",")
-        .map((i) => i.trim())
-        .filter(Boolean);
-      await Promise.all(
-        emails.map((email: string) =>
-          createInvitationServerFn({
-            data: {
-              organizationId,
-              email,
-              role: data.role,
-            },
-          }),
-        ),
-      );
-    },
-    onSuccess: () => {
-      form.reset();
-      void router.invalidate();
-    },
-    onError: (err) => {
-      setError(err.message);
+  const actionServerFn = useServerFn(invite);
+  const action = useMutation({
+    mutationFn: async (data: z.input<typeof inviteSchema>) =>
+      actionServerFn({ data }),
+    onSuccess: (result) => {
+      if (result.success) {
+        form.reset();
+        void router.invalidate();
+      } else {
+        form.setErrorMap(result.errorMap);
+      }
     },
   });
 
@@ -220,9 +236,21 @@ function InviteForm({ organizationId }: { organizationId: number }) {
       emails: "",
       role: "member" as Extract<Domain.MemberRole, "member" | "admin">,
     },
-    onSubmit: async ({ value }) => {
-      setError(null);
-      await createInvitationMutation.mutateAsync(value);
+    validators: {
+      onSubmit: ({ formApi }) => {
+        // parseValuesWithSchema will populate form property with any field errors.
+        const issues = formApi.parseValuesWithSchema(inviteSchema);
+        console.log(`validators: onSubmit: issues: ${JSON.stringify(issues)}`);
+        if (issues) {
+          // https://tanstack.com/form/latest/docs/framework/react/guides/validation#setting-field-level-errors-from-the-forms-validators
+          // Empty string for form so typescript can infer string.
+          return { form: "", fields: issues.fields };
+        }
+      },
+    },
+    onSubmit: ({ value }) => {
+      console.log(`onSubmit: ${JSON.stringify({ value })}`);
+      // action.mutate({ organizationId, ...value });
     },
   });
 
@@ -242,7 +270,15 @@ function InviteForm({ organizationId }: { organizationId: number }) {
           }}
         >
           <FieldGroup>
-            {error && <div className="text-destructive text-sm">{error}</div>}
+            {action.data?.errorMap && (
+              <Alert variant="destructive">
+                <AlertCircle className="size-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  {action.data.errorMap.onSubmit.form}
+                </AlertDescription>
+              </Alert>
+            )}
             <form.Field
               name="emails"
               children={(field) => {

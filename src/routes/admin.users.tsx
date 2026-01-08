@@ -115,6 +115,7 @@ export const banUser = createServerFn({ method: "POST" })
           banReason: parseResult.data.banReason,
         },
       });
+      return { success: true };
     } catch (error: unknown) {
       return {
         success: false,
@@ -128,7 +129,6 @@ export const banUser = createServerFn({ method: "POST" })
         },
       };
     }
-    return { success: true };
   });
 
 export const unbanUser = createServerFn({ method: "POST" })
@@ -320,8 +320,8 @@ function RouteComponent() {
               </PaginationItem>
             ) : (
               <PaginationItem>
-                <span className="text-muted-foreground h-9 px-4 py-2 inline-flex items-center">
-                  <ChevronLeftIcon className="size-4 mr-1" />
+                <span className="text-muted-foreground inline-flex h-9 items-center px-4 py-2">
+                  <ChevronLeftIcon className="mr-1 size-4" />
                   <span className="hidden sm:inline">Previous</span>
                 </span>
               </PaginationItem>
@@ -360,9 +360,9 @@ function RouteComponent() {
               </PaginationItem>
             ) : (
               <PaginationItem>
-                <span className="text-muted-foreground h-9 px-4 py-2 inline-flex items-center">
+                <span className="text-muted-foreground inline-flex h-9 items-center px-4 py-2">
                   <span className="hidden sm:inline">Next</span>
-                  <ChevronRightIcon className="size-4 ml-1" />
+                  <ChevronRightIcon className="ml-1 size-4" />
                 </span>
               </PaginationItem>
             )}
