@@ -7,9 +7,9 @@ import {
   Outlet,
   useMatchRoute,
 } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { ChevronsUpDown } from "lucide-react";
+import { ChevronsUpDown, LogOut } from "lucide-react";
 import { AppLogoIcon } from "@/components/app-logo-icon";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,11 +18,13 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -32,6 +34,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { signOutServerFn } from "@/lib/auth-service";
 
 const beforeLoadServerFn = createServerFn({ method: "GET" })
   .inputValidator((organizationId: string) => organizationId)
@@ -85,6 +88,7 @@ function RouteComponent() {
 function AppSidebar({
   organization,
   organizations,
+  user,
 }: {
   organization: AuthService["$Infer"]["Organization"];
   organizations: AuthService["$Infer"]["Organization"][];
@@ -147,6 +151,9 @@ function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <NavUser user={user} />
+      </SidebarFooter>
     </Sidebar>
   );
 }
@@ -192,6 +199,39 @@ function OrganizationSwitcher({
             </DropdownMenuItem>
           ))}
         </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function NavUser({ user }: { user: { email: string } }) {
+  const signOutFn = useServerFn(signOutServerFn);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={(props) => (
+          <SidebarMenuButton
+            {...props}
+            className="h-12 w-full justify-start overflow-hidden rounded-md p-2 text-left text-sm font-normal"
+          >
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium">{user.email}</span>
+            </div>
+            <ChevronsUpDown className="ml-auto size-4" />
+          </SidebarMenuButton>
+        )}
+      />
+      <DropdownMenuContent>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="truncate px-1 py-1.5 text-center text-sm font-medium">
+            {user.email}
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => void signOutFn()}>
+          <LogOut className="mr-2 size-4" />
+          Sign Out
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
