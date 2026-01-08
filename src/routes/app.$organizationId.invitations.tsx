@@ -4,7 +4,6 @@ import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { MailPlus, X } from "lucide-react";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -268,7 +267,6 @@ function InviteForm({ organizationId }: { organizationId: number }) {
                         placeholder="user1@example.com, user2@example.com"
                         className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                       />
-                      <MailPlus className="text-muted-foreground absolute top-2.5 right-3 size-4" />
                     </div>
                     {isInvalid && (
                       <FieldError errors={field.state.meta.errors} />
@@ -384,7 +382,6 @@ function InvitationItem({
               void handleCancel();
             }}
           >
-            <X className="mr-2 size-3" />
             Cancel
           </Button>
         </ItemActions>
