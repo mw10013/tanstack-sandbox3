@@ -233,6 +233,7 @@ function InviteForm({ organizationId }: { organizationId: number }) {
 
   const form = useForm({
     defaultValues: {
+      organizationId,
       emails: "",
       role: "member" as Extract<Domain.MemberRole, "member" | "admin">,
     },
@@ -286,9 +287,7 @@ function InviteForm({ organizationId }: { organizationId: number }) {
               children={(field) => {
                 const fieldValue = field.state.value;
                 const isInvalid =
-                  field.state.meta.isTouched &&
-                  !field.state.meta.isValid &&
-                  Array.isArray(fieldValue);
+                  field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>
