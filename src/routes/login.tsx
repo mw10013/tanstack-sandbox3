@@ -19,6 +19,8 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const actionSchema = z.object({
   email: z.email(),
@@ -74,7 +76,8 @@ export const Route = createFileRoute("/login")({
 function RouteComponent() {
   const actionFn = useServerFn(actionServerFn);
   const action = useMutation({
-    mutationFn: async (data: z.input<typeof actionSchema>) => actionFn({ data }),
+    mutationFn: async (data: z.input<typeof actionSchema>) =>
+      actionFn({ data }),
     onSuccess: (result) => {
       if (!result.success) {
         form.setErrorMap(result.errorMap);
@@ -133,6 +136,15 @@ function RouteComponent() {
             }}
           >
             <FieldGroup>
+              {action.data?.errorMap && (
+                <Alert variant="destructive">
+                  <AlertCircle className="size-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>
+                    {action.data.errorMap.onSubmit.form}
+                  </AlertDescription>
+                </Alert>
+              )}
               <form.Field
                 name="email"
                 children={(field) => {
