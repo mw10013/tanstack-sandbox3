@@ -37,36 +37,8 @@ import {
 } from "@/components/ui/select";
 import * as Domain from "@/lib/domain";
 
-const inviteSchema = z.object({
-  organizationId: z.number().int().positive(),
-  emails: z
-    .string()
-    .transform((v) =>
-      v
-        .split(",")
-        .map((i) => i.trim())
-        .filter(Boolean),
-    )
-    .refine(
-      (emails) => emails.every((email) => z.email().safeParse(email).success),
-      "Please provide valid email addresses.",
-    )
-    .refine((emails) => emails.length >= 1, "At least one email is required")
-    .refine((emails) => emails.length <= 10, "Maximum 10 emails allowed"),
-  role: Domain.MemberRole.extract(
-    ["member", "admin"],
-    "Role must be Member or Admin.",
-  ),
-});
-
-type InviteFormValues = z.input<typeof inviteSchema>;
-
 const getLoaderData = createServerFn({ method: "GET" })
-  .inputValidator(
-    z.object({
-      organizationId: z.coerce.number().int().positive(),
-    }),
-  )
+  .inputValidator((data: { organizationId: string }) => data)
   .handler(async ({ data, context: { authService } }) => {
     const request = getRequest();
     const { success: canManageInvitations } =
@@ -83,6 +55,79 @@ const getLoaderData = createServerFn({ method: "GET" })
     });
     return { canManageInvitations, invitations };
   });
+
+export const Route = createFileRoute("/app/$organizationId/invitations")({
+  loader: ({ params: data }) => getLoaderData({ data }),
+  component: RouteComponent,
+});
+
+const cancelInvitation = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({ invitationId: z.coerce.number().int().positive() }),
+  )
+  .handler(async ({ data, context: { authService } }) => {
+    const request = getRequest();
+    await authService.api.cancelInvitation({
+      headers: request.headers,
+      body: { invitationId: String(data.invitationId) },
+    });
+    return { success: true };
+  });
+
+function RouteComponent() {
+  const { canManageInvitations, invitations } = Route.useLoaderData();
+  const { organizationId } = Route.useParams();
+  const cancelInvitationFn = useServerFn(cancelInvitation);
+
+  return (
+    <div className="flex flex-col gap-8 p-6">
+      <header>
+        <h1 className="text-3xl font-bold tracking-tight">Invitations</h1>
+        <p className="text-muted-foreground text-sm">
+          Invite new members and manage your invitations.
+        </p>
+      </header>
+
+      {canManageInvitations && <InviteForm organizationId={organizationId} />}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Invitations</CardTitle>
+          <CardDescription>
+            Review and manage invitations sent for this organization.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {invitations.length > 0 ? (
+            <div aria-label="Organization invitations">
+              {invitations.map((invitation) => (
+                <InvitationItem
+                  key={invitation.id}
+                  invitation={invitation}
+                  canManageInvitations={canManageInvitations}
+                  cancelInvitationFn={cancelInvitationFn}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              No invitations have been sent for this organization yet.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+const inviteSchema = z.object({
+  organizationId: z.number().int().positive(),
+  emails: z.array(z.email()).check(z.minLength(1), z.maxLength(10)),
+  role: Domain.MemberRole.extract(
+    ["member", "admin"],
+    "Role must be Member or Admin.",
+  ),
+});
 
 const invite = createServerFn({ method: "POST" })
   .inputValidator((data: z.input<typeof inviteSchema>) => data)
@@ -143,79 +188,34 @@ const invite = createServerFn({ method: "POST" })
     }
   });
 
-const cancelInvitation = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({ invitationId: z.coerce.number().int().positive() }),
-  )
-  .handler(async ({ data, context: { authService } }) => {
-    const request = getRequest();
-    await authService.api.cancelInvitation({
-      headers: request.headers,
-      body: { invitationId: String(data.invitationId) },
-    });
-    return { success: true };
-  });
-
-export const Route = createFileRoute("/app/$organizationId/invitations")({
-  loader: async ({ params }) => {
-    const result = await getLoaderData({
-      data: { organizationId: params.organizationId },
-    });
-    return result;
-  },
-  component: RouteComponent,
+const inviteFormSchema = z.object({
+  emails: z
+    .string()
+    .transform((v) =>
+      v
+        .split(",")
+        .map((i) => i.trim())
+        .filter(Boolean),
+    )
+    .pipe(
+      z
+        .array(z.email())
+        .check(
+          z.minLength(1, "At least one email is required"),
+          z.maxLength(10, "Maximum 10 emails allowed"),
+        ),
+    ),
+  role: Domain.MemberRole.extract(
+    ["member", "admin"],
+    "Role must be Member or Admin.",
+  ),
 });
 
-function RouteComponent() {
-  const data = Route.useLoaderData();
-  const params = Route.useParams();
-  const cancelInvitationFn = useServerFn(cancelInvitation);
-  const organizationId = Number(params.organizationId);
-
-  return (
-    <div className="flex flex-col gap-8 p-6">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight">Invitations</h1>
-        <p className="text-muted-foreground text-sm">
-          Invite new members and manage your invitations.
-        </p>
-      </header>
-
-      {data.canManageInvitations && (
-        <InviteForm organizationId={organizationId} />
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Invitations</CardTitle>
-          <CardDescription>
-            Review and manage invitations sent for this organization.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {data.invitations.length > 0 ? (
-            <div aria-label="Organization invitations">
-              {data.invitations.map((invitation) => (
-                <InvitationItem
-                  key={invitation.id}
-                  invitation={invitation}
-                  canManageInvitations={data.canManageInvitations}
-                  cancelInvitationFn={cancelInvitationFn}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              No invitations have been sent for this organization yet.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function InviteForm({ organizationId }: { organizationId: number }) {
+function InviteForm({
+  organizationId: _organizationId,
+}: {
+  organizationId: string;
+}) {
   const router = useRouter();
   const actionServerFn = useServerFn(invite);
   const action = useMutation({
@@ -233,14 +233,13 @@ function InviteForm({ organizationId }: { organizationId: number }) {
 
   const form = useForm({
     defaultValues: {
-      organizationId,
       emails: "",
       role: "member" as Extract<Domain.MemberRole, "member" | "admin">,
     },
     validators: {
       onSubmit: ({ value, formApi }) => {
         // parseValuesWithSchema will populate form property with any field errors.
-        const issues = formApi.parseValuesWithSchema(inviteSchema);
+        const issues = formApi.parseValuesWithSchema(inviteFormSchema);
         console.log(
           `validators: onSubmit:  ${JSON.stringify({ value, issues })}`,
         );
