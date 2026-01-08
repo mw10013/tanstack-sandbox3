@@ -121,8 +121,21 @@ function RouteComponent() {
 }
 
 const inviteSchema = z.object({
-  organizationId: z.number().int().positive(),
-  emails: z.array(z.email()).check(z.minLength(1), z.maxLength(10)),
+  organizationId: z.string(),
+  emails: z
+    .string()
+    .transform((v) =>
+      v
+        .split(",")
+        .map((i) => i.trim())
+        .filter(Boolean),
+    )
+    .refine(
+      (emails) => emails.every((email) => z.email().safeParse(email).success),
+      "Please provide valid email addresses.",
+    )
+    .refine((emails) => emails.length >= 1, "At least one email is required")
+    .refine((emails) => emails.length <= 10, "Maximum 10 emails allowed"),
   role: Domain.MemberRole.extract(
     ["member", "admin"],
     "Role must be Member or Admin.",
@@ -188,34 +201,7 @@ const invite = createServerFn({ method: "POST" })
     }
   });
 
-const inviteFormSchema = z.object({
-  emails: z
-    .string()
-    .transform((v) =>
-      v
-        .split(",")
-        .map((i) => i.trim())
-        .filter(Boolean),
-    )
-    .pipe(
-      z
-        .array(z.email())
-        .check(
-          z.minLength(1, "At least one email is required"),
-          z.maxLength(10, "Maximum 10 emails allowed"),
-        ),
-    ),
-  role: Domain.MemberRole.extract(
-    ["member", "admin"],
-    "Role must be Member or Admin.",
-  ),
-});
-
-function InviteForm({
-  organizationId: _organizationId,
-}: {
-  organizationId: string;
-}) {
+function InviteForm({ organizationId }: { organizationId: string }) {
   const router = useRouter();
   const actionServerFn = useServerFn(invite);
   const action = useMutation({
@@ -233,13 +219,14 @@ function InviteForm({
 
   const form = useForm({
     defaultValues: {
+      organizationId,
       emails: "",
       role: "member" as Extract<Domain.MemberRole, "member" | "admin">,
     },
     validators: {
       onSubmit: ({ value, formApi }) => {
         // parseValuesWithSchema will populate form property with any field errors.
-        const issues = formApi.parseValuesWithSchema(inviteFormSchema);
+        const issues = formApi.parseValuesWithSchema(inviteSchema);
         console.log(
           `validators: onSubmit:  ${JSON.stringify({ value, issues })}`,
         );
@@ -284,9 +271,7 @@ function InviteForm({
             <form.Field
               name="emails"
               children={(field) => {
-                const fieldValue = field.state.value;
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
+                const isInvalid = field.state.meta.errors.length > 0;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>
@@ -296,11 +281,7 @@ function InviteForm({
                       <input
                         id={field.name}
                         name={field.name}
-                        value={
-                          Array.isArray(fieldValue)
-                            ? fieldValue.join(", ")
-                            : fieldValue
-                        }
+                        value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => {
                           field.handleChange(e.target.value);
@@ -319,8 +300,7 @@ function InviteForm({
             <form.Field
               name="role"
               children={(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
+                const isInvalid = field.state.meta.errors.length > 0;
                 return (
                   <Field data-invalid={isInvalid} className="w-fit">
                     <FieldLabel htmlFor={field.name}>Role</FieldLabel>
