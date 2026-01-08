@@ -35,12 +35,9 @@ import {
 } from "@/components/ui/select";
 import * as Domain from "@/lib/domain";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const inviteSchema = z.object({
   emails: z
     .string()
-    .trim()
-    .min(1, "At least one email is required")
     .transform((v) =>
       v
         .split(",")
@@ -51,13 +48,17 @@ const inviteSchema = z.object({
       (emails) => emails.every((email) => z.email().safeParse(email).success),
       "Please provide valid email addresses.",
     )
+    .refine((emails) => emails.length >= 1, "At least one email is required")
     .refine((emails) => emails.length <= 10, "Maximum 10 emails allowed"),
-  role: Domain.MemberRole,
+  role: Domain.MemberRole.extract(
+    ["member", "admin"],
+    "Role must be Member or Admin.",
+  ),
 });
 
 type InviteFormValues = z.input<typeof inviteSchema>;
 
-const getInvitationsData = createServerFn({ method: "GET" })
+const getLoaderData = createServerFn({ method: "GET" })
   .inputValidator(
     z.object({
       organizationId: z.coerce.number().int().positive(),
@@ -124,7 +125,7 @@ const cancelInvitation = createServerFn({ method: "POST" })
 export const Route = createFileRoute("/app/$organizationId/invitations")({
   loader: async ({ params }) => {
     const organizationId = Number(params.organizationId);
-    const result = await getInvitationsData({ data: { organizationId } });
+    const result = await getLoaderData({ data: { organizationId } });
     return result;
   },
   component: RouteComponent,
@@ -329,7 +330,7 @@ function InvitationItem({
   cancelInvitationFn,
 }: {
   invitation: NonNullable<
-    Awaited<ReturnType<typeof getInvitationsData>>["invitations"]
+    Awaited<ReturnType<typeof getLoaderData>>["invitations"]
   >[number];
   canManageInvitations: boolean;
   cancelInvitationFn: ReturnType<typeof useServerFn<typeof cancelInvitation>>;
