@@ -82,6 +82,29 @@ export const getUsers = createServerFn({ method: "GET" })
     };
   });
 
+export const Route = createFileRoute("/admin/users")({
+  validateSearch: (search) => {
+    const schema = z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      filter: z.string().trim().optional(),
+    });
+    return schema.parse(search);
+  },
+  loaderDeps: ({ search }) => ({ page: search.page, filter: search.filter }),
+  loader: async ({ deps }) => {
+    const result = await getUsers({ data: deps });
+    if (deps.page > result.pageCount) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
+      throw redirect({
+        to: "/admin/users",
+        search: { page: result.pageCount, filter: deps.filter },
+      });
+    }
+    return result;
+  },
+  component: RouteComponent,
+});
+
 export const unbanUser = createServerFn({ method: "POST" })
   .inputValidator(z.object({ userId: z.string() }))
   .handler(async ({ data, context: { authService } }) => {
@@ -106,34 +129,11 @@ export const impersonateUser = createServerFn({ method: "POST" })
     throw redirect({ to: "/app", headers });
   });
 
-export const Route = createFileRoute("/admin/users")({
-  validateSearch: (search) => {
-    const schema = z.object({
-      page: z.coerce.number().int().min(1).default(1),
-      filter: z.string().trim().optional(),
-    });
-    return schema.parse(search);
-  },
-  loaderDeps: ({ search }) => ({ page: search.page, filter: search.filter }),
-  loader: async ({ deps }) => {
-    const result = await getUsers({ data: deps });
-    if (deps.page > result.pageCount) {
-      // eslint-disable-next-line @typescript-eslint/only-throw-error
-      throw redirect({
-        to: "/admin/users",
-        search: { page: result.pageCount, filter: deps.filter },
-      });
-    }
-    return result;
-  },
-  component: RouteComponent,
-});
-
 function RouteComponent() {
   const router = useRouter();
   const data = Route.useLoaderData();
-  const unbanUserFn = useServerFn(unbanUser);
-  const impersonateUserFn = useServerFn(impersonateUser);
+  const unbanUserServerFn = useServerFn(unbanUser);
+  const impersonateUserServerFn = useServerFn(impersonateUser);
   const [banDialog, setBanDialog] = React.useState<{
     isOpen: boolean;
     userId?: string;
@@ -216,7 +216,7 @@ function RouteComponent() {
                     {user.banned ? (
                       <DropdownMenuItem
                         onClick={() => {
-                          void unbanUserFn({
+                          void unbanUserServerFn({
                             data: { userId: String(user.userId) },
                           }).then(() => router.invalidate());
                         }}
@@ -237,7 +237,7 @@ function RouteComponent() {
                     )}
                     <DropdownMenuItem
                       onClick={() => {
-                        void impersonateUserFn({
+                        void impersonateUserServerFn({
                           data: { userId: String(user.userId) },
                         });
                       }}
@@ -345,47 +345,17 @@ const banUserSchema = z.object({
 });
 
 export const banUser = createServerFn({ method: "POST" })
-  .inputValidator((data: z.input<typeof banUserSchema>) => data)
+  .inputValidator(banUserSchema)
   .handler(async ({ data, context: { authService } }) => {
-    const parseResult = banUserSchema.safeParse(data);
-    if (!parseResult.success) {
-      const { formErrors, fieldErrors } = z.flattenError(parseResult.error);
-      const errorMap = {
-        onSubmit: {
-          ...(formErrors.length > 0 ? { form: formErrors.join(", ") } : {}),
-          fields: Object.entries(fieldErrors).reduce<
-            Record<string, { message: string }[]>
-          >((acc, [key, messages]) => {
-            acc[key] = messages.map((message) => ({ message }));
-            return acc;
-          }, {}),
-        },
-      };
-      return { success: false, errorMap };
-    }
-    try {
-      const request = getRequest();
-      await authService.api.banUser({
-        headers: request.headers,
-        body: {
-          userId: parseResult.data.userId,
-          banReason: parseResult.data.banReason,
-        },
-      });
-      return { success: true };
-    } catch (error: unknown) {
-      return {
-        success: false,
-        errorMap: {
-          onSubmit: {
-            form: `Failed to ban user: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
-            fields: {},
-          },
-        },
-      };
-    }
+    const request = getRequest();
+    await authService.api.banUser({
+      headers: request.headers,
+      body: {
+        userId: data.userId,
+        banReason: data.banReason,
+      },
+    });
+    return { success: true };
   });
 
 function BanDialog({
@@ -402,29 +372,29 @@ function BanDialog({
   const banUserMutation = useMutation({
     mutationFn: async (data: z.input<typeof banUserSchema>) =>
       banUserServerFn({ data }),
-    onSuccess: (result) => {
-      if (result.success) {
-        onOpenChange(false);
-        void router.invalidate();
-      } else {
-        form.setErrorMap(result.errorMap);
-      }
+    onSuccess: () => {
+      onOpenChange(false);
+      void router.invalidate();
     },
   });
 
   const form = useForm({
     defaultValues: {
+      userId: userId ?? "",
       banReason: "",
     },
+    validators: {
+      onSubmit: banUserSchema,
+    },
     onSubmit: ({ value }) => {
-      if (userId)
-        banUserMutation.mutate({ userId, banReason: value.banReason });
+      if (userId) banUserMutation.mutate(value);
     },
   });
 
   React.useEffect(() => {
     if (isOpen && userId) {
       form.reset({
+        userId,
         banReason: "",
       });
     }
@@ -449,12 +419,12 @@ function BanDialog({
           }}
         >
           <FieldGroup>
-            {banUserMutation.data?.errorMap && (
+            {banUserMutation.error && (
               <Alert variant="destructive">
                 <AlertCircle className="size-4" />
                 <AlertTitle>Error</AlertTitle>
                 <AlertDescription>
-                  {banUserMutation.data.errorMap.onSubmit.form}
+                  {banUserMutation.error.message}
                 </AlertDescription>
               </Alert>
             )}
