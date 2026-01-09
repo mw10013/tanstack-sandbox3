@@ -1,4 +1,5 @@
 import * as React from "react";
+import { invariant } from "@epic-web/invariant";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -144,63 +145,38 @@ const inviteSchema = z.object({
 });
 
 const invite = createServerFn({ method: "POST" })
-  .inputValidator((data: z.input<typeof inviteSchema>) => data)
-  .handler(async ({ data, context: { authService, repository } }) => {
-    const parseResult = inviteSchema.safeParse(data);
-    if (!parseResult.success) {
-      const { formErrors, fieldErrors } = z.flattenError(parseResult.error);
-      const errorMap = {
-        onSubmit: {
-          ...(formErrors.length > 0 ? { form: formErrors.join(", ") } : {}),
-          fields: Object.entries(fieldErrors).reduce<
-            Record<string, { message: string }[]>
-          >((acc, [key, messages]) => {
-            acc[key] = messages.map((message) => ({ message }));
-            return acc;
-          }, {}),
-        },
-      };
-      return { success: false, errorMap };
-    }
-    try {
+  .inputValidator(inviteSchema)
+  .handler(
+    async ({
+      data: { organizationId, emails, role },
+      context: { authService, repository },
+    }) => {
       const request = getRequest();
-      for (const email of parseResult.data.emails) {
+      for (const email of emails) {
         const result = await authService.api.createInvitation({
           headers: request.headers,
           body: {
             email,
-            role: parseResult.data.role,
-            organizationId: String(parseResult.data.organizationId),
+            role,
+            organizationId: String(organizationId),
             resend: true,
           },
         });
         // Workaround for better-auth createInvitation role bug.
         // Occurs when a pending invitation exists and a new invitation is created with a different role.
-        if (result.role !== parseResult.data.role) {
+        if (result.role !== role) {
           console.log(
-            `Applying workaround for better-auth createInvitation role bug: expected role ${parseResult.data.role}, got ${String(result.role)} for invitation ${String(result.id)}`,
+            `Applying workaround for better-auth createInvitation role bug: expected role ${role}, got ${String(result.role)} for invitation ${String(result.id)}`,
           );
           await repository.updateInvitationRole({
             invitationId: Number(result.id),
-            role: parseResult.data.role,
+            role,
           });
         }
       }
       return { success: true };
-    } catch (error: unknown) {
-      return {
-        success: false,
-        errorMap: {
-          onSubmit: {
-            form: `Failed to invite: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
-            fields: {},
-          },
-        },
-      };
-    }
-  });
+    },
+  );
 
 function InviteForm({ organizationId }: { organizationId: string }) {
   const router = useRouter();
@@ -208,13 +184,9 @@ function InviteForm({ organizationId }: { organizationId: string }) {
   const action = useMutation({
     mutationFn: async (data: z.input<typeof inviteSchema>) =>
       actionServerFn({ data }),
-    onSuccess: (result) => {
-      if (result.success) {
-        form.reset();
-        void router.invalidate();
-      } else {
-        form.setErrorMap(result.errorMap);
-      }
+    onSuccess: () => {
+      form.reset();
+      void router.invalidate();
     },
   });
 
@@ -228,8 +200,7 @@ function InviteForm({ organizationId }: { organizationId: string }) {
       onSubmit: inviteSchema,
     },
     onSubmit: ({ value }) => {
-      console.log(`onSubmit: ${JSON.stringify({ value })}`, { value });
-      // action.mutate({ organizationId, ...value });
+      action.mutate(value);
     },
   });
 
@@ -249,12 +220,16 @@ function InviteForm({ organizationId }: { organizationId: string }) {
           }}
         >
           <FieldGroup>
-            {action.data?.errorMap && (
+            {(action.error || action.data?.errorMap) && (
               <Alert variant="destructive">
                 <AlertCircle className="size-4" />
                 <AlertTitle>Error</AlertTitle>
                 <AlertDescription>
-                  {action.data.errorMap.onSubmit.form}
+                  {action.error
+                    ? action.error.message
+                    : action.data.errorMap
+                      ? action.data.errorMap.onSubmit.form
+                      : null}
                 </AlertDescription>
               </Alert>
             )}
