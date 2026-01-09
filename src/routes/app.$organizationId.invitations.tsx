@@ -1,5 +1,3 @@
-import * as React from "react";
-import { invariant } from "@epic-web/invariant";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -39,6 +37,11 @@ import {
 } from "@/components/ui/select";
 import * as Domain from "@/lib/domain";
 
+export const Route = createFileRoute("/app/$organizationId/invitations")({
+  loader: ({ params: data }) => getLoaderData({ data }),
+  component: RouteComponent,
+});
+
 const getLoaderData = createServerFn({ method: "GET" })
   .inputValidator((data: { organizationId: string }) => data)
   .handler(async ({ data, context: { authService } }) => {
@@ -58,28 +61,9 @@ const getLoaderData = createServerFn({ method: "GET" })
     return { canManageInvitations, invitations };
   });
 
-export const Route = createFileRoute("/app/$organizationId/invitations")({
-  loader: ({ params: data }) => getLoaderData({ data }),
-  component: RouteComponent,
-});
-
-const cancelInvitation = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({ invitationId: z.coerce.number().int().positive() }),
-  )
-  .handler(async ({ data, context: { authService } }) => {
-    const request = getRequest();
-    await authService.api.cancelInvitation({
-      headers: request.headers,
-      body: { invitationId: String(data.invitationId) },
-    });
-    return { success: true };
-  });
-
 function RouteComponent() {
   const { canManageInvitations, invitations } = Route.useLoaderData();
   const { organizationId } = Route.useParams();
-  const cancelInvitationFn = useServerFn(cancelInvitation);
 
   return (
     <div className="flex flex-col gap-8 p-6">
@@ -107,7 +91,6 @@ function RouteComponent() {
                   key={invitation.id}
                   invitation={invitation}
                   canManageInvitations={canManageInvitations}
-                  cancelInvitationFn={cancelInvitationFn}
                 />
               ))}
             </div>
@@ -300,31 +283,38 @@ function InviteForm({ organizationId }: { organizationId: string }) {
   );
 }
 
+const cancelInvitation = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ invitationId: z.string() }))
+  .handler(async ({ data: { invitationId }, context: { authService } }) => {
+    const request = getRequest();
+    await authService.api.cancelInvitation({
+      headers: request.headers,
+      body: { invitationId },
+    });
+    return { success: true };
+  });
+
 function InvitationItem({
   invitation,
   canManageInvitations,
-  cancelInvitationFn,
 }: {
   invitation: NonNullable<
     Awaited<ReturnType<typeof getLoaderData>>["invitations"]
   >[number];
   canManageInvitations: boolean;
-  cancelInvitationFn: ReturnType<typeof useServerFn<typeof cancelInvitation>>;
 }) {
   const router = useRouter();
-  const [pending, setPending] = React.useState(false);
+  const cancelInvitationFn = useServerFn(cancelInvitation);
 
-  const handleCancel = async () => {
-    setPending(true);
-    try {
-      await cancelInvitationFn({
-        data: { invitationId: Number(invitation.id) },
-      });
+  const cancelMutation = useMutation({
+    mutationFn: () =>
+      cancelInvitationFn({
+        data: { invitationId: invitation.id },
+      }),
+    onSuccess: () => {
       void router.invalidate();
-    } finally {
-      setPending(false);
-    }
-  };
+    },
+  });
 
   return (
     <Item size="sm" className="gap-4 px-0">
@@ -354,9 +344,9 @@ function InvitationItem({
             variant="outline"
             size="sm"
             aria-label={`Cancel invitation for ${invitation.email}`}
-            disabled={pending}
+            disabled={cancelMutation.isPending}
             onClick={() => {
-              void handleCancel();
+              cancelMutation.mutate();
             }}
           >
             Cancel
