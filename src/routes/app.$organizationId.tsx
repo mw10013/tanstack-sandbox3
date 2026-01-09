@@ -96,27 +96,6 @@ function AppSidebar({
 }) {
   const matchRoute = useMatchRoute();
 
-  const items = [
-    {
-      id: "Organization Home",
-      to: "/app/$organizationId",
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion
-      params: { organizationId: String(organization.id) },
-    },
-    {
-      id: "Invitations",
-      to: "/app/$organizationId/invitations",
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion
-      params: { organizationId: String(organization.id) },
-    },
-    {
-      id: "Members",
-      to: "/app/$organizationId/members",
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion
-      params: { organizationId: String(organization.id) },
-    },
-  ];
-
   return (
     <Sidebar>
       <SidebarHeader>
@@ -139,18 +118,49 @@ function AppSidebar({
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton
-                    isActive={Boolean(matchRoute({ to: item.to }))}
-                    render={
-                      <Link to={item.to} params={item.params}>
-                        {item.id}
-                      </Link>
-                    }
-                  />
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={Boolean(matchRoute({ to: "/app/$organizationId" }))}
+                  render={
+                    <Link
+                      to="/app/$organizationId"
+                      params={{ organizationId: String(organization.id) }}
+                    >
+                      Organization Home
+                    </Link>
+                  }
+                />
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={Boolean(
+                    matchRoute({ to: "/app/$organizationId/invitations" }),
+                  )}
+                  render={
+                    <Link
+                      to="/app/$organizationId/invitations"
+                      params={{ organizationId: String(organization.id) }}
+                    >
+                      Invitations
+                    </Link>
+                  }
+                />
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={Boolean(
+                    matchRoute({ to: "/app/$organizationId/members" }),
+                  )}
+                  render={
+                    <Link
+                      to="/app/$organizationId/members"
+                      params={{ organizationId: String(organization.id) }}
+                    >
+                      Members
+                    </Link>
+                  }
+                />
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
