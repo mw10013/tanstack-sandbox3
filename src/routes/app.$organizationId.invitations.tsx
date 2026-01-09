@@ -297,9 +297,7 @@ function InvitationItem({
   invitation,
   canManageInvitations,
 }: {
-  invitation: NonNullable<
-    (typeof Route)["types"]["loaderData"]
-  >["invitations"][number];
+  invitation: (typeof Route)["types"]["loaderData"]["invitations"][number];
   canManageInvitations: boolean;
 }) {
   const router = useRouter();
