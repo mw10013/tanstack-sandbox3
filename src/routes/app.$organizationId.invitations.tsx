@@ -225,19 +225,7 @@ function InviteForm({ organizationId }: { organizationId: string }) {
       role: "member" as Extract<Domain.MemberRole, "member" | "admin">,
     },
     validators: {
-      onSubmit: ({ value, formApi }) => {
-        // parseValuesWithSchema will populate form property with any field errors.
-        const issues = formApi.parseValuesWithSchema(inviteSchema);
-        console.log(
-          `validators: onSubmit:  ${JSON.stringify({ value, issues })}`,
-          { value, issues },
-        );
-        if (issues) {
-          // https://tanstack.com/form/latest/docs/framework/react/guides/validation#setting-field-level-errors-from-the-forms-validators
-          // Empty string for form so typescript can infer string.
-          return { form: "", fields: issues.fields };
-        }
-      },
+      onSubmit: inviteSchema,
     },
     onSubmit: ({ value }) => {
       console.log(`onSubmit: ${JSON.stringify({ value })}`, { value });
