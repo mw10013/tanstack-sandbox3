@@ -291,7 +291,6 @@ const cancelInvitation = createServerFn({ method: "POST" })
       headers: request.headers,
       body: { invitationId },
     });
-    return { success: true };
   });
 
 function InvitationItem({
@@ -299,8 +298,8 @@ function InvitationItem({
   canManageInvitations,
 }: {
   invitation: NonNullable<
-    Awaited<ReturnType<typeof getLoaderData>>["invitations"]
-  >[number];
+    (typeof Route)["types"]["loaderData"]
+  >["invitations"][number];
   canManageInvitations: boolean;
 }) {
   const router = useRouter();
