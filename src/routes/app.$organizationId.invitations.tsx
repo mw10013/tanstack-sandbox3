@@ -229,6 +229,7 @@ function InviteForm({ organizationId }: { organizationId: string }) {
         const issues = formApi.parseValuesWithSchema(inviteSchema);
         console.log(
           `validators: onSubmit:  ${JSON.stringify({ value, issues })}`,
+          { value, issues },
         );
         if (issues) {
           // https://tanstack.com/form/latest/docs/framework/react/guides/validation#setting-field-level-errors-from-the-forms-validators
@@ -238,7 +239,7 @@ function InviteForm({ organizationId }: { organizationId: string }) {
       },
     },
     onSubmit: ({ value }) => {
-      console.log(`onSubmit: ${JSON.stringify({ value })}`);
+      console.log(`onSubmit: ${JSON.stringify({ value })}`, { value });
       // action.mutate({ organizationId, ...value });
     },
   });
@@ -333,6 +334,7 @@ function InviteForm({ organizationId }: { organizationId: string }) {
                   disabled={!canSubmit || isSubmitting}
                   className="self-end"
                 >
+                  {JSON.stringify({ canSubmit, isSubmitting })}
                   {isSubmitting ? "..." : "Invite"}
                 </Button>
               )}
