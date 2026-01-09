@@ -58,11 +58,6 @@ import {
 
 const LIMIT = 5;
 
-const banUserSchema = z.object({
-  userId: z.string(),
-  banReason: z.string().max(100),
-});
-
 export const getUsers = createServerFn({ method: "GET" })
   .inputValidator(
     z.object({
@@ -85,50 +80,6 @@ export const getUsers = createServerFn({ method: "GET" })
       pageCount,
       filter,
     };
-  });
-
-export const banUser = createServerFn({ method: "POST" })
-  .inputValidator((data: z.input<typeof banUserSchema>) => data)
-  .handler(async ({ data, context: { authService } }) => {
-    const parseResult = banUserSchema.safeParse(data);
-    if (!parseResult.success) {
-      const { formErrors, fieldErrors } = z.flattenError(parseResult.error);
-      const errorMap = {
-        onSubmit: {
-          ...(formErrors.length > 0 ? { form: formErrors.join(", ") } : {}),
-          fields: Object.entries(fieldErrors).reduce<
-            Record<string, { message: string }[]>
-          >((acc, [key, messages]) => {
-            acc[key] = messages.map((message) => ({ message }));
-            return acc;
-          }, {}),
-        },
-      };
-      return { success: false, errorMap };
-    }
-    try {
-      const request = getRequest();
-      await authService.api.banUser({
-        headers: request.headers,
-        body: {
-          userId: parseResult.data.userId,
-          banReason: parseResult.data.banReason,
-        },
-      });
-      return { success: true };
-    } catch (error: unknown) {
-      return {
-        success: false,
-        errorMap: {
-          onSubmit: {
-            form: `Failed to ban user: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
-            fields: {},
-          },
-        },
-      };
-    }
   });
 
 export const unbanUser = createServerFn({ method: "POST" })
@@ -388,6 +339,55 @@ function RouteComponent() {
   );
 }
 
+const banUserSchema = z.object({
+  userId: z.string(),
+  banReason: z.string().max(100),
+});
+
+export const banUser = createServerFn({ method: "POST" })
+  .inputValidator((data: z.input<typeof banUserSchema>) => data)
+  .handler(async ({ data, context: { authService } }) => {
+    const parseResult = banUserSchema.safeParse(data);
+    if (!parseResult.success) {
+      const { formErrors, fieldErrors } = z.flattenError(parseResult.error);
+      const errorMap = {
+        onSubmit: {
+          ...(formErrors.length > 0 ? { form: formErrors.join(", ") } : {}),
+          fields: Object.entries(fieldErrors).reduce<
+            Record<string, { message: string }[]>
+          >((acc, [key, messages]) => {
+            acc[key] = messages.map((message) => ({ message }));
+            return acc;
+          }, {}),
+        },
+      };
+      return { success: false, errorMap };
+    }
+    try {
+      const request = getRequest();
+      await authService.api.banUser({
+        headers: request.headers,
+        body: {
+          userId: parseResult.data.userId,
+          banReason: parseResult.data.banReason,
+        },
+      });
+      return { success: true };
+    } catch (error: unknown) {
+      return {
+        success: false,
+        errorMap: {
+          onSubmit: {
+            form: `Failed to ban user: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+            fields: {},
+          },
+        },
+      };
+    }
+  });
+
 function BanDialog({
   userId,
   isOpen,
@@ -398,10 +398,10 @@ function BanDialog({
   onOpenChange: (isOpen: boolean) => void;
 }) {
   const router = useRouter();
-  const actionServerFn = useServerFn(banUser);
-  const action = useMutation({
+  const banUserServerFn = useServerFn(banUser);
+  const banUserMutation = useMutation({
     mutationFn: async (data: z.input<typeof banUserSchema>) =>
-      actionServerFn({ data }),
+      banUserServerFn({ data }),
     onSuccess: (result) => {
       if (result.success) {
         onOpenChange(false);
@@ -417,7 +417,8 @@ function BanDialog({
       banReason: "",
     },
     onSubmit: ({ value }) => {
-      if (userId) action.mutate({ userId, banReason: value.banReason });
+      if (userId)
+        banUserMutation.mutate({ userId, banReason: value.banReason });
     },
   });
 
@@ -448,12 +449,12 @@ function BanDialog({
           }}
         >
           <FieldGroup>
-            {action.data?.errorMap && (
+            {banUserMutation.data?.errorMap && (
               <Alert variant="destructive">
                 <AlertCircle className="size-4" />
                 <AlertTitle>Error</AlertTitle>
                 <AlertDescription>
-                  {action.data.errorMap.onSubmit.form}
+                  {banUserMutation.data.errorMap.onSubmit.form}
                 </AlertDescription>
               </Alert>
             )}
@@ -500,9 +501,9 @@ function BanDialog({
               <Button
                 type="submit"
                 form="ban-form"
-                disabled={!canSubmit || action.isPending}
+                disabled={!canSubmit || banUserMutation.isPending}
               >
-                {action.isPending ? "..." : "Ban"}
+                {banUserMutation.isPending ? "..." : "Ban"}
               </Button>
             )}
           </form.Subscribe>

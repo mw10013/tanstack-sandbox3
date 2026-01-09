@@ -124,26 +124,26 @@ function InvitationItem({
   invitation: (typeof Route)["types"]["loaderData"]["userInvitations"][number];
 }) {
   const router = useRouter();
-  const acceptFn = useServerFn(acceptInvitation);
-  const rejectFn = useServerFn(rejectInvitation);
+  const acceptInvitationServerFn = useServerFn(acceptInvitation);
+  const rejectInvitationServerFn = useServerFn(rejectInvitation);
 
-  const acceptMutation = useMutation({
+  const acceptInvitationMutation = useMutation({
     mutationFn: () =>
-      acceptFn({ data: { invitationId: String(invitation.invitationId) } }),
+      acceptInvitationServerFn({ data: { invitationId: String(invitation.invitationId) } }),
     onSuccess: () => {
       void router.invalidate();
     },
   });
 
-  const rejectMutation = useMutation({
+  const rejectInvitationMutation = useMutation({
     mutationFn: () =>
-      rejectFn({ data: { invitationId: String(invitation.invitationId) } }),
+      rejectInvitationServerFn({ data: { invitationId: String(invitation.invitationId) } }),
     onSuccess: () => {
       void router.invalidate();
     },
   });
 
-  const disabled = acceptMutation.isPending || rejectMutation.isPending;
+  const disabled = acceptInvitationMutation.isPending || rejectInvitationMutation.isPending;
 
   return (
     <Item size="sm" className="gap-4 px-0">
@@ -165,7 +165,7 @@ function InvitationItem({
           disabled={disabled}
           aria-label={`Accept invitation from ${invitation.inviter.email}`}
           onClick={() => {
-            acceptMutation.mutate();
+            acceptInvitationMutation.mutate();
           }}
         >
           Accept
@@ -179,7 +179,7 @@ function InvitationItem({
           disabled={disabled}
           aria-label={`Reject invitation from ${invitation.inviter.email}`}
           onClick={() => {
-            rejectMutation.mutate();
+            rejectInvitationMutation.mutate();
           }}
         >
           Reject

@@ -162,10 +162,10 @@ const invite = createServerFn({ method: "POST" })
 
 function InviteForm({ organizationId }: { organizationId: string }) {
   const router = useRouter();
-  const actionServerFn = useServerFn(invite);
-  const action = useMutation({
+  const inviteServerFn = useServerFn(invite);
+  const inviteMutation = useMutation({
     mutationFn: (data: z.input<typeof inviteSchema>) =>
-      actionServerFn({ data }),
+      inviteServerFn({ data }),
     onSuccess: () => {
       form.reset();
       void router.invalidate();
@@ -182,7 +182,7 @@ function InviteForm({ organizationId }: { organizationId: string }) {
       onSubmit: inviteSchema,
     },
     onSubmit: ({ value }) => {
-      action.mutate(value);
+      inviteMutation.mutate(value);
     },
   });
 
@@ -202,11 +202,11 @@ function InviteForm({ organizationId }: { organizationId: string }) {
           }}
         >
           <FieldGroup>
-            {action.error && (
+            {inviteMutation.error && (
               <Alert variant="destructive">
                 <AlertCircle className="size-4" />
                 <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{action.error.message}</AlertDescription>
+                <AlertDescription>{inviteMutation.error.message}</AlertDescription>
               </Alert>
             )}
             <form.Field
@@ -269,10 +269,10 @@ function InviteForm({ organizationId }: { organizationId: string }) {
               children={(canSubmit) => (
                 <Button
                   type="submit"
-                  disabled={!canSubmit || action.isPending}
+                  disabled={!canSubmit || inviteMutation.isPending}
                   className="self-end"
                 >
-                  {action.isPending ? "..." : "Invite"}
+                  {inviteMutation.isPending ? "..." : "Invite"}
                 </Button>
               )}
             />
@@ -301,11 +301,10 @@ function InvitationItem({
   canManageInvitations: boolean;
 }) {
   const router = useRouter();
-  const cancelInvitationFn = useServerFn(cancelInvitation);
-
-  const cancelMutation = useMutation({
+  const cancelInvitationServerFn = useServerFn(cancelInvitation);
+  const cancelInvitationMutation = useMutation({
     mutationFn: () =>
-      cancelInvitationFn({
+      cancelInvitationServerFn({
         data: { invitationId: invitation.id },
       }),
     onSuccess: () => {
@@ -341,9 +340,9 @@ function InvitationItem({
             variant="outline"
             size="sm"
             aria-label={`Cancel invitation for ${invitation.email}`}
-            disabled={cancelMutation.isPending}
+            disabled={cancelInvitationMutation.isPending}
             onClick={() => {
-              cancelMutation.mutate();
+              cancelInvitationMutation.mutate();
             }}
           >
             Cancel

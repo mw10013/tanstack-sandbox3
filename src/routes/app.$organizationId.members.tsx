@@ -174,13 +174,13 @@ function MemberItem({
   canLeaveMemberId?: string;
 }) {
   const router = useRouter();
-  const removeMemberFn = useServerFn(removeMember);
-  const leaveOrganizationFn = useServerFn(leaveOrganization);
-  const updateRoleFn = useServerFn(updateMemberRole);
+  const removeMemberServerFn = useServerFn(removeMember);
+  const leaveOrganizationServerFn = useServerFn(leaveOrganization);
+  const updateMemberRoleServerFn = useServerFn(updateMemberRole);
 
-  const removeMutation = useMutation({
+  const removeMemberMutation = useMutation({
     mutationFn: () =>
-      removeMemberFn({
+      removeMemberServerFn({
         data: {
           organizationId: member.organizationId,
           memberId: member.id,
@@ -191,9 +191,9 @@ function MemberItem({
     },
   });
 
-  const leaveMutation = useMutation({
+  const leaveOrganizationMutation = useMutation({
     mutationFn: () =>
-      leaveOrganizationFn({
+      leaveOrganizationServerFn({
         data: { organizationId: member.organizationId },
       }),
     onSuccess: () => {
@@ -201,9 +201,9 @@ function MemberItem({
     },
   });
 
-  const updateRoleMutation = useMutation({
+  const updateMemberRoleMutation = useMutation({
     mutationFn: (role: "member" | "admin") =>
-      updateRoleFn({
+      updateMemberRoleServerFn({
         data: {
           organizationId: member.organizationId,
           memberId: member.id,
@@ -217,9 +217,9 @@ function MemberItem({
 
   const isOwner = member.role === "owner";
   const pending =
-    removeMutation.isPending ||
-    leaveMutation.isPending ||
-    updateRoleMutation.isPending;
+    removeMemberMutation.isPending ||
+    leaveOrganizationMutation.isPending ||
+    updateMemberRoleMutation.isPending;
 
   return (
     <Item size="sm" className="gap-4 px-0">
@@ -230,7 +230,7 @@ function MemberItem({
             <Select
               value={member.role}
               onValueChange={(value) => {
-                updateRoleMutation.mutate(value as "member" | "admin");
+                updateMemberRoleMutation.mutate(value as "member" | "admin");
               }}
             >
               <SelectTrigger
@@ -258,7 +258,7 @@ function MemberItem({
                 size="sm"
                 disabled={pending}
                 onClick={() => {
-                  removeMutation.mutate();
+                  removeMemberMutation.mutate();
                 }}
               >
                 Remove
@@ -271,7 +271,7 @@ function MemberItem({
                 size="sm"
                 disabled={pending}
                 onClick={() => {
-                  leaveMutation.mutate();
+                  leaveOrganizationMutation.mutate();
                 }}
               >
                 Leave

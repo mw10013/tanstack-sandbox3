@@ -3,7 +3,9 @@ import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
+import { AlertCircle } from "lucide-react";
 import { z } from "zod";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,19 +21,21 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 
-const actionSchema = z.object({
+export const Route = createFileRoute("/login")({
+  component: RouteComponent,
+});
+
+const loginSchema = z.object({
   email: z.email(),
 });
 
-export const actionServerFn = createServerFn({
+export const login = createServerFn({
   method: "POST",
 })
-  .inputValidator((data: z.input<typeof actionSchema>) => data)
+  .inputValidator(loginSchema)
   .handler(async ({ data, context: { authService, env } }) => {
-    const parseResult = actionSchema.safeParse(data);
+    const parseResult = loginSchema.safeParse(data);
     if (!parseResult.success) {
       const { formErrors, fieldErrors } = z.flattenError(parseResult.error);
       const errorMap = {
@@ -69,15 +73,10 @@ export const actionServerFn = createServerFn({
     return { success: true, magicLink };
   });
 
-export const Route = createFileRoute("/login")({
-  component: RouteComponent,
-});
-
 function RouteComponent() {
-  const actionFn = useServerFn(actionServerFn);
-  const action = useMutation({
-    mutationFn: async (data: z.input<typeof actionSchema>) =>
-      actionFn({ data }),
+  const loginServerFn = useServerFn(login);
+  const loginMutation = useMutation({
+    mutationFn: async (data: z.input<typeof loginSchema>) => loginServerFn({ data }),
     onSuccess: (result) => {
       if (!result.success) {
         form.setErrorMap(result.errorMap);
@@ -90,11 +89,11 @@ function RouteComponent() {
     },
     onSubmit: async ({ value }) => {
       console.log(`onSubmit: value: ${JSON.stringify(value)}`);
-      await action.mutateAsync(value);
+      await loginMutation.mutateAsync(value);
     },
   });
 
-  if (action.data?.success) {
+  if (loginMutation.data?.success) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center">
         <Card className="w-full max-w-sm">
@@ -106,10 +105,10 @@ function RouteComponent() {
             </CardDescription>
           </CardHeader>
         </Card>
-        {action.data.magicLink && (
+        {loginMutation.data.magicLink && (
           <div className="mt-4">
-            <a href={action.data.magicLink} className="block">
-              {action.data.magicLink}
+            <a href={loginMutation.data.magicLink} className="block">
+              {loginMutation.data.magicLink}
             </a>
           </div>
         )}
@@ -136,12 +135,12 @@ function RouteComponent() {
             }}
           >
             <FieldGroup>
-              {action.data?.errorMap && (
+              {loginMutation.data?.errorMap && (
                 <Alert variant="destructive">
                   <AlertCircle className="size-4" />
                   <AlertTitle>Error</AlertTitle>
                   <AlertDescription>
-                    {action.data.errorMap.onSubmit.form}
+                    {loginMutation.data.errorMap.onSubmit.form}
                   </AlertDescription>
                 </Alert>
               )}
@@ -182,10 +181,10 @@ function RouteComponent() {
                   <Button
                     type="submit"
                     form="login-form"
-                    disabled={!canSubmit || action.isPending}
+                    disabled={!canSubmit || loginMutation.isPending}
                     className="w-full"
                   >
-                    {isSubmitting || action.isPending
+                    {isSubmitting || loginMutation.isPending
                       ? "..."
                       : "Send magic link"}
                   </Button>
