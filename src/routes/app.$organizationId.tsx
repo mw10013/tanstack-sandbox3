@@ -99,19 +99,19 @@ function AppSidebar({
   const items = [
     {
       id: "Organization Home",
-      to: "/app/$organizationId" as const,
+      to: "/app/$organizationId",
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion
       params: { organizationId: String(organization.id) },
     },
     {
       id: "Invitations",
-      to: "/app/$organizationId/invitations" as const,
+      to: "/app/$organizationId/invitations",
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion
       params: { organizationId: String(organization.id) },
     },
     {
       id: "Members",
-      to: "/app/$organizationId/members" as const,
+      to: "/app/$organizationId/members",
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion
       params: { organizationId: String(organization.id) },
     },
