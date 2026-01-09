@@ -101,14 +101,14 @@ const leaveOrganization = createServerFn({ method: "POST" })
     });
   });
 
-const updateMemberRoleSchema = z.object({
-  organizationId: z.string(),
-  memberId: z.string(),
-  role: Domain.MemberRole.exclude(["owner"]),
-});
-
 const updateMemberRole = createServerFn({ method: "POST" })
-  .inputValidator(updateMemberRoleSchema)
+  .inputValidator(
+    z.object({
+      organizationId: z.string(),
+      memberId: z.string(),
+      role: Domain.MemberRole.exclude(["owner"]),
+    }),
+  )
   .handler(
     async ({
       data: { organizationId, memberId, role },
