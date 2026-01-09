@@ -35,35 +35,13 @@ export const login = createServerFn({
 })
   .inputValidator(loginSchema)
   .handler(async ({ data, context: { authService, env } }) => {
-    const parseResult = loginSchema.safeParse(data);
-    if (!parseResult.success) {
-      const { formErrors, fieldErrors } = z.flattenError(parseResult.error);
-      const errorMap = {
-        onSubmit: {
-          ...(formErrors.length > 0 ? { form: formErrors.join(", ") } : {}),
-          fields: Object.entries(fieldErrors).reduce<
-            Record<string, { message: string }[]>
-          >((acc, [key, messages]) => {
-            acc[key] = messages.map((message) => ({ message }));
-            return acc;
-          }, {}),
-        },
-      };
-      return { success: false, errorMap };
-    }
     const request = getRequest();
     const result = await authService.api.signInMagicLink({
       headers: request.headers,
-      body: { email: parseResult.data.email, callbackURL: "/magic-link" },
+      body: { email: data.email, callbackURL: "/magic-link" },
     });
     if (!result.status) {
-      const errorMap = {
-        onSubmit: {
-          form: "Failed to send magic link. Please try again.",
-          fields: {},
-        },
-      };
-      return { success: false, errorMap };
+      throw new Error("Failed to send magic link. Please try again.");
     }
     const magicLink =
       env.DEMO_MODE === "true"
@@ -76,20 +54,18 @@ export const login = createServerFn({
 function RouteComponent() {
   const loginServerFn = useServerFn(login);
   const loginMutation = useMutation({
-    mutationFn: async (data: z.input<typeof loginSchema>) => loginServerFn({ data }),
-    onSuccess: (result) => {
-      if (!result.success) {
-        form.setErrorMap(result.errorMap);
-      }
-    },
+    mutationFn: (data: z.input<typeof loginSchema>) => loginServerFn({ data }),
   });
   const form = useForm({
     defaultValues: {
       email: "",
     },
-    onSubmit: async ({ value }) => {
+    validators: {
+      onSubmit: loginSchema,
+    },
+    onSubmit: ({ value }) => {
       console.log(`onSubmit: value: ${JSON.stringify(value)}`);
-      await loginMutation.mutateAsync(value);
+      void loginMutation.mutateAsync(value);
     },
   });
 
@@ -128,34 +104,32 @@ function RouteComponent() {
         <CardContent>
           <form
             id="login-form"
-            method="post"
             onSubmit={(e) => {
               e.preventDefault();
               void form.handleSubmit();
             }}
           >
             <FieldGroup>
-              {loginMutation.data?.errorMap && (
+              {loginMutation.error && (
                 <Alert variant="destructive">
                   <AlertCircle className="size-4" />
                   <AlertTitle>Error</AlertTitle>
                   <AlertDescription>
-                    {loginMutation.data.errorMap.onSubmit.form}
+                    {loginMutation.error.message}
                   </AlertDescription>
                 </Alert>
               )}
               <form.Field
                 name="email"
                 children={(field) => {
-                  const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid;
+                  const isInvalid = field.state.meta.errors.length > 0;
                   return (
                     <Field data-invalid={isInvalid}>
                       <FieldLabel htmlFor={field.name}>Email</FieldLabel>
                       <Input
                         id={field.name}
                         name={field.name}
-                        // type="email"
+                        type="email"
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => {
@@ -171,22 +145,15 @@ function RouteComponent() {
                   );
                 }}
               />
-              <form.Subscribe
-                selector={(formState) => [
-                  formState.canSubmit,
-                  formState.isSubmitting,
-                ]}
-              >
-                {([canSubmit, isSubmitting]) => (
+              <form.Subscribe selector={(formState) => formState.canSubmit}>
+                {(canSubmit) => (
                   <Button
                     type="submit"
                     form="login-form"
                     disabled={!canSubmit || loginMutation.isPending}
                     className="w-full"
                   >
-                    {isSubmitting || loginMutation.isPending
-                      ? "..."
-                      : "Send magic link"}
+                    {loginMutation.isPending ? "..." : "Send magic link"}
                   </Button>
                 )}
               </form.Subscribe>

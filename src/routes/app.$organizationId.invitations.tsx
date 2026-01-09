@@ -141,7 +141,7 @@ const invite = createServerFn({ method: "POST" })
           body: {
             email,
             role,
-            organizationId: String(organizationId),
+            organizationId: organizationId,
             resend: true,
           },
         });
