@@ -124,7 +124,7 @@ function AppSidebar({
                   render={
                     <Link
                       to="/app/$organizationId"
-                      params={{ organizationId: String(organization.id) }}
+                      params={{ organizationId: organization.id }}
                     >
                       Organization Home
                     </Link>
@@ -139,7 +139,7 @@ function AppSidebar({
                   render={
                     <Link
                       to="/app/$organizationId/invitations"
-                      params={{ organizationId: String(organization.id) }}
+                      params={{ organizationId: organization.id }}
                     >
                       Invitations
                     </Link>
@@ -154,7 +154,7 @@ function AppSidebar({
                   render={
                     <Link
                       to="/app/$organizationId/members"
-                      params={{ organizationId: String(organization.id) }}
+                      params={{ organizationId: organization.id }}
                     >
                       Members
                     </Link>
