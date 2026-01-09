@@ -71,13 +71,13 @@ const getLoaderData = createServerFn({ method: "GET" })
     };
   });
 
-const removeMemberSchema = z.object({
-  organizationId: z.string(),
-  memberId: z.string(),
-});
-
 const removeMember = createServerFn({ method: "POST" })
-  .inputValidator(removeMemberSchema)
+  .inputValidator(
+    z.object({
+      organizationId: z.string(),
+      memberId: z.string(),
+    }),
+  )
   .handler(
     async ({
       data: { organizationId, memberId },
@@ -91,12 +91,8 @@ const removeMember = createServerFn({ method: "POST" })
     },
   );
 
-const leaveOrganizationSchema = z.object({
-  organizationId: z.string(),
-});
-
 const leaveOrganization = createServerFn({ method: "POST" })
-  .inputValidator(leaveOrganizationSchema)
+  .inputValidator(z.object({ organizationId: z.string() }))
   .handler(async ({ data: { organizationId }, context: { authService } }) => {
     const request = getRequest();
     await authService.api.leaveOrganization({
