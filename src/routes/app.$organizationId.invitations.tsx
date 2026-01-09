@@ -174,7 +174,6 @@ const invite = createServerFn({ method: "POST" })
           });
         }
       }
-      return { success: true };
     },
   );
 
@@ -182,7 +181,7 @@ function InviteForm({ organizationId }: { organizationId: string }) {
   const router = useRouter();
   const actionServerFn = useServerFn(invite);
   const action = useMutation({
-    mutationFn: async (data: z.input<typeof inviteSchema>) =>
+    mutationFn: (data: z.input<typeof inviteSchema>) =>
       actionServerFn({ data }),
     onSuccess: () => {
       form.reset();
@@ -220,17 +219,11 @@ function InviteForm({ organizationId }: { organizationId: string }) {
           }}
         >
           <FieldGroup>
-            {(action.error || action.data?.errorMap) && (
+            {action.error && (
               <Alert variant="destructive">
                 <AlertCircle className="size-4" />
                 <AlertTitle>Error</AlertTitle>
-                <AlertDescription>
-                  {action.error
-                    ? action.error.message
-                    : action.data.errorMap
-                      ? action.data.errorMap.onSubmit.form
-                      : null}
-                </AlertDescription>
+                <AlertDescription>{action.error.message}</AlertDescription>
               </Alert>
             )}
             <form.Field
