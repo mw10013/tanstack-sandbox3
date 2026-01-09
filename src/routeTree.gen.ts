@@ -23,6 +23,7 @@ import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscript
 import { Route as AdminSessionsRouteImport } from './routes/admin.sessions'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AppOrganizationIdIndexRouteImport } from './routes/app.$organizationId.index'
+import { Route as AppOrganizationIdMembersRouteImport } from './routes/app.$organizationId.members'
 import { Route as AppOrganizationIdInvitationsRouteImport } from './routes/app.$organizationId.invitations'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
@@ -95,6 +96,12 @@ const AppOrganizationIdIndexRoute = AppOrganizationIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppOrganizationIdRoute,
 } as any)
+const AppOrganizationIdMembersRoute =
+  AppOrganizationIdMembersRouteImport.update({
+    id: '/members',
+    path: '/members',
+    getParentRoute: () => AppOrganizationIdRoute,
+  } as any)
 const AppOrganizationIdInvitationsRoute =
   AppOrganizationIdInvitationsRouteImport.update({
     id: '/invitations',
@@ -122,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/app/$organizationId/invitations': typeof AppOrganizationIdInvitationsRoute
+  '/app/$organizationId/members': typeof AppOrganizationIdMembersRoute
   '/app/$organizationId/': typeof AppOrganizationIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -136,6 +144,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/app/$organizationId/invitations': typeof AppOrganizationIdInvitationsRoute
+  '/app/$organizationId/members': typeof AppOrganizationIdMembersRoute
   '/app/$organizationId': typeof AppOrganizationIdIndexRoute
 }
 export interface FileRoutesById {
@@ -155,6 +164,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/app/$organizationId/invitations': typeof AppOrganizationIdInvitationsRoute
+  '/app/$organizationId/members': typeof AppOrganizationIdMembersRoute
   '/app/$organizationId/': typeof AppOrganizationIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/api/auth/$'
     | '/app/$organizationId/invitations'
+    | '/app/$organizationId/members'
     | '/app/$organizationId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/api/auth/$'
     | '/app/$organizationId/invitations'
+    | '/app/$organizationId/members'
     | '/app/$organizationId'
   id:
     | '__root__'
@@ -206,6 +218,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/api/auth/$'
     | '/app/$organizationId/invitations'
+    | '/app/$organizationId/members'
     | '/app/$organizationId/'
   fileRoutesById: FileRoutesById
 }
@@ -318,6 +331,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrganizationIdIndexRouteImport
       parentRoute: typeof AppOrganizationIdRoute
     }
+    '/app/$organizationId/members': {
+      id: '/app/$organizationId/members'
+      path: '/members'
+      fullPath: '/app/$organizationId/members'
+      preLoaderRoute: typeof AppOrganizationIdMembersRouteImport
+      parentRoute: typeof AppOrganizationIdRoute
+    }
     '/app/$organizationId/invitations': {
       id: '/app/$organizationId/invitations'
       path: '/invitations'
@@ -365,11 +385,13 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface AppOrganizationIdRouteChildren {
   AppOrganizationIdInvitationsRoute: typeof AppOrganizationIdInvitationsRoute
+  AppOrganizationIdMembersRoute: typeof AppOrganizationIdMembersRoute
   AppOrganizationIdIndexRoute: typeof AppOrganizationIdIndexRoute
 }
 
 const AppOrganizationIdRouteChildren: AppOrganizationIdRouteChildren = {
   AppOrganizationIdInvitationsRoute: AppOrganizationIdInvitationsRoute,
+  AppOrganizationIdMembersRoute: AppOrganizationIdMembersRoute,
   AppOrganizationIdIndexRoute: AppOrganizationIdIndexRoute,
 }
 

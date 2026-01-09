@@ -111,6 +111,13 @@ function AppSidebar({
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion
       params: { organizationId: String(organization.id) },
     },
+    {
+      id: "Members",
+      href: `/app/${organization.id}/members`,
+      to: "/app/$organizationId/members" as const,
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion
+      params: { organizationId: String(organization.id) },
+    },
   ];
 
   return (
