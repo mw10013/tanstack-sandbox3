@@ -21,6 +21,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
   Item,
   ItemActions,
@@ -278,19 +279,17 @@ function InviteForm({ organizationId }: { organizationId: string }) {
                     <FieldLabel htmlFor={field.name}>
                       Email Addresses
                     </FieldLabel>
-                    <div className="relative">
-                      <input
-                        id={field.name}
-                        name={field.name}
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => {
-                          field.handleChange(e.target.value);
-                        }}
-                        placeholder="user1@example.com, user2@example.com"
-                        className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                      />
-                    </div>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
+                      placeholder="user1@example.com, user2@example.com"
+                      aria-invalid={isInvalid}
+                    />
                     {isInvalid && (
                       <FieldError errors={field.state.meta.errors} />
                     )}
@@ -327,15 +326,14 @@ function InviteForm({ organizationId }: { organizationId: string }) {
               }}
             />
             <form.Subscribe
-              selector={(state) => [state.canSubmit, state.isSubmitting]}
-              children={([canSubmit, isSubmitting]) => (
+              selector={(state) => state.canSubmit}
+              children={(canSubmit) => (
                 <Button
                   type="submit"
-                  disabled={!canSubmit || isSubmitting}
+                  disabled={!canSubmit || action.isPending}
                   className="self-end"
                 >
-                  {JSON.stringify({ canSubmit, isSubmitting })}
-                  {isSubmitting ? "..." : "Invite"}
+                  {action.isPending ? "..." : "Invite"}
                 </Button>
               )}
             />
