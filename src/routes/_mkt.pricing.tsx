@@ -102,18 +102,6 @@ function RouteComponent() {
   const upgradeSubscriptionFn = useServerFn(upgradeSubscriptionServerFn);
   const [isAnnual, setIsAnnual] = React.useState(false);
 
-  const handleSubscribe = (lookupKey: string) => {
-    void upgradeSubscriptionFn({ data: { intent: lookupKey } }).catch(
-      (error: unknown) => {
-        if (error instanceof Response) {
-          console.error("Subscription error:", error.statusText);
-        } else {
-          console.error("Subscription error:", error);
-        }
-      },
-    );
-  };
-
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center py-12">
       <div className="relative flex w-full flex-col items-center justify-center gap-4 border px-6 py-48">
