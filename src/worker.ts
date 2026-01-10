@@ -34,6 +34,7 @@ export default {
       secret: env.BETTER_AUTH_SECRET,
       demoMode: env.DEMO_MODE === "true",
       transactionalEmail: env.TRANSACTIONAL_EMAIL,
+      stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET,
     });
     const session = await authService.api.getSession({
       headers: request.headers,

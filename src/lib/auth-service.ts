@@ -19,6 +19,7 @@ interface CreateAuthServiceOptions {
   secret: string;
   demoMode?: boolean;
   transactionalEmail: string;
+  stripeWebhookSecret: string;
   sendMagicLink?: Parameters<typeof magicLink>[0]["sendMagicLink"];
   sendInvitationEmail?: NonNullable<
     Parameters<typeof organization>[0]
@@ -43,6 +44,7 @@ function createBetterAuthOptions({
   secret,
   demoMode,
   transactionalEmail,
+  stripeWebhookSecret,
   sendMagicLink,
   sendInvitationEmail,
   databaseHookUserCreateAfter,
@@ -143,7 +145,7 @@ function createBetterAuthOptions({
       }),
       stripe({
         stripeClient: stripeService.stripe,
-        stripeWebhookSecret: "",
+        stripeWebhookSecret,
         createCustomerOnSignUp: false,
         subscription: {
           enabled: true,
