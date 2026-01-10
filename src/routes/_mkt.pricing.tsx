@@ -1,9 +1,12 @@
 import * as React from "react";
 import { invariant } from "@epic-web/invariant";
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
+import { AlertCircle } from "lucide-react";
 import * as z from "zod";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
@@ -102,13 +105,20 @@ function RouteComponent() {
   const upgradeSubscriptionFn = useServerFn(upgradeSubscriptionServerFn);
   const [isAnnual, setIsAnnual] = React.useState(false);
 
+  const upgradeSubscriptionMutation = useMutation({
+    mutationFn: (intent: string) =>
+      upgradeSubscriptionFn({
+        data: { intent },
+      }),
+  });
+
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center py-12">
       <div className="relative flex w-full flex-col items-center justify-center gap-4 border px-6 py-48">
         <span className="bg-primary absolute -top-2.25 left-0 h-5 w-px animate-pulse opacity-80" />
         <span className="bg-primary absolute top-0 -left-2.25 h-px w-5 animate-pulse opacity-80" />
         <span className="bg-primary absolute right-0 -bottom-2.25 h-5 w-px animate-pulse opacity-80" />
-        <span className="bg-primary absolute -right-[9px] bottom-0 h-px w-5 animate-pulse opacity-80" />
+        <span className="bg-primary absolute -right-2.25 bottom-0 h-px w-5 animate-pulse opacity-80" />
         <div className="absolute inset-0 isolate -z-10 overflow-hidden">
           <div className="absolute inset-y-0 left-1/2 w-300 -translate-x-1/2 mask-[linear-gradient(black,transparent_320px),linear-gradient(90deg,transparent,black_5%,black_95%,transparent)] mask-intersect">
             <svg
@@ -167,6 +177,17 @@ function RouteComponent() {
           />
           <span className="text-sm font-medium">Annual</span>
         </div>
+        {upgradeSubscriptionMutation.error && (
+          <div className="w-full border-x p-6">
+            <Alert variant="destructive">
+              <AlertCircle className="size-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {upgradeSubscriptionMutation.error.message}
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
         <div className="flex w-full flex-col items-center md:flex-row">
           {plans.map((plan) => {
             const price = isAnnual
@@ -193,9 +214,11 @@ function RouteComponent() {
                   </span>
                 </div>
                 <Button
-                  onClick={() =>
-                    void upgradeSubscriptionFn({ data: { intent: lookupKey } })
-                  }
+                  onClick={() => {
+                    upgradeSubscriptionMutation.reset();
+                    upgradeSubscriptionMutation.mutate(lookupKey);
+                  }}
+                  disabled={upgradeSubscriptionMutation.isPending}
                   className="mt-6 w-full rounded-full! text-base! font-semibold"
                   data-testid={plan.name}
                 >
