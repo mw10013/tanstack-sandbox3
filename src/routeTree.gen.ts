@@ -26,6 +26,7 @@ import { Route as MktPricingRouteImport } from './routes/_mkt.pricing'
 import { Route as AppOrganizationIdIndexRouteImport } from './routes/app.$organizationId.index'
 import { Route as AppOrganizationIdMembersRouteImport } from './routes/app.$organizationId.members'
 import { Route as AppOrganizationIdInvitationsRouteImport } from './routes/app.$organizationId.invitations'
+import { Route as AppOrganizationIdBillingRouteImport } from './routes/app.$organizationId.billing'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const MagicLinkRoute = MagicLinkRouteImport.update({
@@ -114,6 +115,12 @@ const AppOrganizationIdInvitationsRoute =
     path: '/invitations',
     getParentRoute: () => AppOrganizationIdRoute,
   } as any)
+const AppOrganizationIdBillingRoute =
+  AppOrganizationIdBillingRouteImport.update({
+    id: '/billing',
+    path: '/billing',
+    getParentRoute: () => AppOrganizationIdRoute,
+  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -135,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/$organizationId/billing': typeof AppOrganizationIdBillingRoute
   '/app/$organizationId/invitations': typeof AppOrganizationIdInvitationsRoute
   '/app/$organizationId/members': typeof AppOrganizationIdMembersRoute
   '/app/$organizationId/': typeof AppOrganizationIdIndexRoute
@@ -151,6 +159,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/$organizationId/billing': typeof AppOrganizationIdBillingRoute
   '/app/$organizationId/invitations': typeof AppOrganizationIdInvitationsRoute
   '/app/$organizationId/members': typeof AppOrganizationIdMembersRoute
   '/app/$organizationId': typeof AppOrganizationIdIndexRoute
@@ -172,6 +181,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/app/$organizationId/billing': typeof AppOrganizationIdBillingRoute
   '/app/$organizationId/invitations': typeof AppOrganizationIdInvitationsRoute
   '/app/$organizationId/members': typeof AppOrganizationIdMembersRoute
   '/app/$organizationId/': typeof AppOrganizationIdIndexRoute
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/api/auth/$'
+    | '/app/$organizationId/billing'
     | '/app/$organizationId/invitations'
     | '/app/$organizationId/members'
     | '/app/$organizationId/'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/api/auth/$'
+    | '/app/$organizationId/billing'
     | '/app/$organizationId/invitations'
     | '/app/$organizationId/members'
     | '/app/$organizationId'
@@ -229,6 +241,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/api/auth/$'
+    | '/app/$organizationId/billing'
     | '/app/$organizationId/invitations'
     | '/app/$organizationId/members'
     | '/app/$organizationId/'
@@ -364,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrganizationIdInvitationsRouteImport
       parentRoute: typeof AppOrganizationIdRoute
     }
+    '/app/$organizationId/billing': {
+      id: '/app/$organizationId/billing'
+      path: '/billing'
+      fullPath: '/app/$organizationId/billing'
+      preLoaderRoute: typeof AppOrganizationIdBillingRouteImport
+      parentRoute: typeof AppOrganizationIdRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -405,12 +425,14 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface AppOrganizationIdRouteChildren {
+  AppOrganizationIdBillingRoute: typeof AppOrganizationIdBillingRoute
   AppOrganizationIdInvitationsRoute: typeof AppOrganizationIdInvitationsRoute
   AppOrganizationIdMembersRoute: typeof AppOrganizationIdMembersRoute
   AppOrganizationIdIndexRoute: typeof AppOrganizationIdIndexRoute
 }
 
 const AppOrganizationIdRouteChildren: AppOrganizationIdRouteChildren = {
+  AppOrganizationIdBillingRoute: AppOrganizationIdBillingRoute,
   AppOrganizationIdInvitationsRoute: AppOrganizationIdInvitationsRoute,
   AppOrganizationIdMembersRoute: AppOrganizationIdMembersRoute,
   AppOrganizationIdIndexRoute: AppOrganizationIdIndexRoute,
