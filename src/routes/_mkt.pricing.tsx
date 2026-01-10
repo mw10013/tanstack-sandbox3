@@ -95,7 +95,7 @@ const upgradeSubscriptionServerFn = createServerFn({ method: "POST" })
 
       // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw redirect({
-        to: url,
+        href: url,
       });
     },
   );
