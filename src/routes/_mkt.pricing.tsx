@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import * as z from "zod";
@@ -29,8 +29,7 @@ const upgradeSubscriptionServerFn = createServerFn({ method: "POST" })
         throw redirect({ to: "/login" });
       }
       if (session.user.role !== "user") {
-        // eslint-disable-next-line @typescript-eslint/only-throw-error
-        throw new Response("Forbidden", { status: 403 });
+        throw new Error("Forbidden");
       }
 
       const plans = await stripeService.getPlans();
@@ -41,9 +40,7 @@ const upgradeSubscriptionServerFn = createServerFn({ method: "POST" })
       );
       if (!plan) {
         // eslint-disable-next-line @typescript-eslint/only-throw-error
-        throw new Response(`Missing plan for intent ${intent}`, {
-          status: 404,
-        });
+        throw notFound();
       }
 
       const activeOrganizationId = session.session.activeOrganizationId;
