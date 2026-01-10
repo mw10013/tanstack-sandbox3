@@ -24,6 +24,7 @@ declare module "@tanstack/react-start" {
 
 export default {
   async fetch(request, env, _ctx) {
+    console.log(`fetch: ${request.url}`);
     const repository = createRepository({ db: env.D1 });
     const stripeService = createStripeService();
     const authService = createAuthService({
