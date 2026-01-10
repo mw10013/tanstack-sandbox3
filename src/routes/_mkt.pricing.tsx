@@ -1,4 +1,5 @@
 import * as React from "react";
+import { invariant } from "@epic-web/invariant";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
@@ -6,7 +7,14 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
-const getPlansServerFn = createServerFn({ method: "GET" }).handler(
+export const Route = createFileRoute("/_mkt/pricing")({
+  loader: async () => {
+    return await getLoaderData();
+  },
+  component: RouteComponent,
+});
+
+const getLoaderData = createServerFn({ method: "GET" }).handler(
   async ({ context: { stripeService } }) => {
     const plans = await stripeService.getPlans();
     return { plans };
@@ -44,10 +52,7 @@ const upgradeSubscriptionServerFn = createServerFn({ method: "POST" })
       }
 
       const activeOrganizationId = session.session.activeOrganizationId;
-      if (!activeOrganizationId) {
-        // eslint-disable-next-line @typescript-eslint/only-throw-error
-        throw new Response("Missing activeOrganizationId", { status: 400 });
-      }
+      invariant(activeOrganizationId, "Missing activeOrganizationId");
 
       const request = getRequest();
       const subscriptions = await authService.api.listActiveSubscriptions({
@@ -82,10 +87,7 @@ const upgradeSubscriptionServerFn = createServerFn({ method: "POST" })
 
       console.log(`pricing: upgradeSubscription`, { isRedirect, url });
       if (!isRedirect || !url) {
-        // eslint-disable-next-line @typescript-eslint/only-throw-error
-        throw new Response("Failed to create checkout session", {
-          status: 500,
-        });
+        throw new Error("Failed to create checkout session");
       }
 
       // eslint-disable-next-line @typescript-eslint/only-throw-error
@@ -94,13 +96,6 @@ const upgradeSubscriptionServerFn = createServerFn({ method: "POST" })
       });
     },
   );
-
-export const Route = createFileRoute("/_mkt/pricing")({
-  loader: async () => {
-    return await getPlansServerFn();
-  },
-  component: RouteComponent,
-});
 
 function RouteComponent() {
   const { plans } = Route.useLoaderData();
@@ -122,12 +117,12 @@ function RouteComponent() {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center py-12">
       <div className="relative flex w-full flex-col items-center justify-center gap-4 border px-6 py-48">
-        <span className="bg-primary absolute -top-[9px] left-0 h-5 w-px animate-pulse opacity-80" />
-        <span className="bg-primary absolute top-0 -left-[9px] h-px w-5 animate-pulse opacity-80" />
-        <span className="bg-primary absolute right-0 -bottom-[9px] h-5 w-px animate-pulse opacity-80" />
+        <span className="bg-primary absolute -top-2.25 left-0 h-5 w-px animate-pulse opacity-80" />
+        <span className="bg-primary absolute top-0 -left-2.25 h-px w-5 animate-pulse opacity-80" />
+        <span className="bg-primary absolute right-0 -bottom-2.25 h-5 w-px animate-pulse opacity-80" />
         <span className="bg-primary absolute -right-[9px] bottom-0 h-px w-5 animate-pulse opacity-80" />
         <div className="absolute inset-0 isolate -z-10 overflow-hidden">
-          <div className="absolute inset-y-0 left-1/2 w-[1200px] -translate-x-1/2 mask-[linear-gradient(black,transparent_320px),linear-gradient(90deg,transparent,black_5%,black_95%,transparent)] mask-intersect">
+          <div className="absolute inset-y-0 left-1/2 w-300 -translate-x-1/2 mask-[linear-gradient(black,transparent_320px),linear-gradient(90deg,transparent,black_5%,black_95%,transparent)] mask-intersect">
             <svg
               className="text-primary/10 pointer-events-none absolute inset-0"
               width="100%"
@@ -210,13 +205,13 @@ function RouteComponent() {
                   </span>
                 </div>
                 <Button
-                  onClick={() => {
-                    handleSubscribe(lookupKey);
-                  }}
+                  onClick={() =>
+                    void upgradeSubscriptionFn({ data: { intent: lookupKey } })
+                  }
                   className="mt-6 w-full rounded-full! text-base! font-semibold"
                   data-testid={plan.name}
                 >
-                  Get {plan.name.charAt(0).toUpperCase() + plan.name.slice(1)}
+                  Get <span className="capitalize">{plan.name}</span>
                 </Button>
                 <svg
                   viewBox="0 0 39 39"
