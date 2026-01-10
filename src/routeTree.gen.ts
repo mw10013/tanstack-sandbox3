@@ -22,6 +22,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
 import { Route as AdminSessionsRouteImport } from './routes/admin.sessions'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
+import { Route as MktPricingRouteImport } from './routes/_mkt.pricing'
 import { Route as AppOrganizationIdIndexRouteImport } from './routes/app.$organizationId.index'
 import { Route as AppOrganizationIdMembersRouteImport } from './routes/app.$organizationId.members'
 import { Route as AppOrganizationIdInvitationsRouteImport } from './routes/app.$organizationId.invitations'
@@ -91,6 +92,11 @@ const AdminCustomersRoute = AdminCustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => AdminRoute,
 } as any)
+const MktPricingRoute = MktPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => MktRoute,
+} as any)
 const AppOrganizationIdIndexRoute = AppOrganizationIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/magic-link': typeof MagicLinkRoute
+  '/pricing': typeof MktPricingRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/sessions': typeof AdminSessionsRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/magic-link': typeof MagicLinkRoute
+  '/pricing': typeof MktPricingRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/sessions': typeof AdminSessionsRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
@@ -154,6 +162,7 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/magic-link': typeof MagicLinkRoute
+  '/_mkt/pricing': typeof MktPricingRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/sessions': typeof AdminSessionsRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
@@ -174,6 +183,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/magic-link'
+    | '/pricing'
     | '/admin/customers'
     | '/admin/sessions'
     | '/admin/subscriptions'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/magic-link'
+    | '/pricing'
     | '/admin/customers'
     | '/admin/sessions'
     | '/admin/subscriptions'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/magic-link'
+    | '/_mkt/pricing'
     | '/admin/customers'
     | '/admin/sessions'
     | '/admin/subscriptions'
@@ -324,6 +336,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCustomersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_mkt/pricing': {
+      id: '/_mkt/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof MktPricingRouteImport
+      parentRoute: typeof MktRoute
+    }
     '/app/$organizationId/': {
       id: '/app/$organizationId/'
       path: '/'
@@ -356,10 +375,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface MktRouteChildren {
+  MktPricingRoute: typeof MktPricingRoute
   MktIndexRoute: typeof MktIndexRoute
 }
 
 const MktRouteChildren: MktRouteChildren = {
+  MktPricingRoute: MktPricingRoute,
   MktIndexRoute: MktIndexRoute,
 }
 

@@ -49,12 +49,12 @@ function Header() {
             <span className="bg-primary relative top-1 size-1.5" />
           </a>
           <div className="hidden items-center gap-6 md:flex">
-            {/* <Link
+            <Link
               to="/pricing"
               className="data-hovered:text-primary text-muted-foreground font-medium"
             >
               Pricing
-            </Link> */}
+            </Link>
             <a
               href="https://github.com/mw10013/tanstack-sandbox3"
               target="_blank"
