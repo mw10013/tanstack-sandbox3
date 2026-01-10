@@ -100,7 +100,9 @@ function RouteComponent() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{memberCount}</div>
+            <div className="text-2xl font-bold" data-testid="member-count">
+              {memberCount}
+            </div>
           </CardContent>
         </Card>
 
@@ -129,7 +131,9 @@ function InvitationItem({
 
   const acceptInvitationMutation = useMutation({
     mutationFn: () =>
-      acceptInvitationServerFn({ data: { invitationId: String(invitation.invitationId) } }),
+      acceptInvitationServerFn({
+        data: { invitationId: String(invitation.invitationId) },
+      }),
     onSuccess: () => {
       void router.invalidate();
     },
@@ -137,13 +141,16 @@ function InvitationItem({
 
   const rejectInvitationMutation = useMutation({
     mutationFn: () =>
-      rejectInvitationServerFn({ data: { invitationId: String(invitation.invitationId) } }),
+      rejectInvitationServerFn({
+        data: { invitationId: String(invitation.invitationId) },
+      }),
     onSuccess: () => {
       void router.invalidate();
     },
   });
 
-  const disabled = acceptInvitationMutation.isPending || rejectInvitationMutation.isPending;
+  const disabled =
+    acceptInvitationMutation.isPending || rejectInvitationMutation.isPending;
 
   return (
     <Item size="sm" className="gap-4 px-0">

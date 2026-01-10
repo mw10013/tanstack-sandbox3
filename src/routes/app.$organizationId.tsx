@@ -140,6 +140,7 @@ function AppSidebar({
                     <Link
                       to="/app/$organizationId/invitations"
                       params={{ organizationId: organization.id }}
+                      data-testid="sidebar-invitations"
                     >
                       Invitations
                     </Link>
@@ -170,6 +171,7 @@ function AppSidebar({
                     <Link
                       to="/app/$organizationId/billing"
                       params={{ organizationId: organization.id }}
+                      data-testid="sidebar-billing"
                     >
                       Billing
                     </Link>

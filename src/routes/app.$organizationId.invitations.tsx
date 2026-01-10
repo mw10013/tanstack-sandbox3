@@ -85,7 +85,10 @@ function RouteComponent() {
         </CardHeader>
         <CardContent>
           {invitations.length > 0 ? (
-            <div aria-label="Organization invitations">
+            <div
+              aria-label="Organization invitations"
+              data-testid="invitations-list"
+            >
               {invitations.map((invitation) => (
                 <InvitationItem
                   key={invitation.id}
@@ -206,7 +209,9 @@ function InviteForm({ organizationId }: { organizationId: string }) {
               <Alert variant="destructive">
                 <AlertCircle className="size-4" />
                 <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{inviteMutation.error.message}</AlertDescription>
+                <AlertDescription>
+                  {inviteMutation.error.message}
+                </AlertDescription>
               </Alert>
             )}
             <form.Field

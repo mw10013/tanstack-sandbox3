@@ -28,6 +28,7 @@ import { Route as AppOrganizationIdMembersRouteImport } from './routes/app.$orga
 import { Route as AppOrganizationIdInvitationsRouteImport } from './routes/app.$organizationId.invitations'
 import { Route as AppOrganizationIdBillingRouteImport } from './routes/app.$organizationId.billing'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiE2eDeleteUserEmailRouteImport } from './routes/api/e2e/delete/user/$email'
 
 const MagicLinkRoute = MagicLinkRouteImport.update({
   id: '/magic-link',
@@ -126,6 +127,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiE2eDeleteUserEmailRoute = ApiE2eDeleteUserEmailRouteImport.update({
+  id: '/api/e2e/delete/user/$email',
+  path: '/api/e2e/delete/user/$email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/app/$organizationId/invitations': typeof AppOrganizationIdInvitationsRoute
   '/app/$organizationId/members': typeof AppOrganizationIdMembersRoute
   '/app/$organizationId/': typeof AppOrganizationIdIndexRoute
+  '/api/e2e/delete/user/$email': typeof ApiE2eDeleteUserEmailRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByTo {
   '/app/$organizationId/invitations': typeof AppOrganizationIdInvitationsRoute
   '/app/$organizationId/members': typeof AppOrganizationIdMembersRoute
   '/app/$organizationId': typeof AppOrganizationIdIndexRoute
+  '/api/e2e/delete/user/$email': typeof ApiE2eDeleteUserEmailRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -185,6 +193,7 @@ export interface FileRoutesById {
   '/app/$organizationId/invitations': typeof AppOrganizationIdInvitationsRoute
   '/app/$organizationId/members': typeof AppOrganizationIdMembersRoute
   '/app/$organizationId/': typeof AppOrganizationIdIndexRoute
+  '/api/e2e/delete/user/$email': typeof ApiE2eDeleteUserEmailRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -207,6 +216,7 @@ export interface FileRouteTypes {
     | '/app/$organizationId/invitations'
     | '/app/$organizationId/members'
     | '/app/$organizationId/'
+    | '/api/e2e/delete/user/$email'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/app/$organizationId/invitations'
     | '/app/$organizationId/members'
     | '/app/$organizationId'
+    | '/api/e2e/delete/user/$email'
   id:
     | '__root__'
     | '/_mkt'
@@ -245,6 +256,7 @@ export interface FileRouteTypes {
     | '/app/$organizationId/invitations'
     | '/app/$organizationId/members'
     | '/app/$organizationId/'
+    | '/api/e2e/delete/user/$email'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -254,6 +266,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MagicLinkRoute: typeof MagicLinkRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiE2eDeleteUserEmailRoute: typeof ApiE2eDeleteUserEmailRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -391,6 +404,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/e2e/delete/user/$email': {
+      id: '/api/e2e/delete/user/$email'
+      path: '/api/e2e/delete/user/$email'
+      fullPath: '/api/e2e/delete/user/$email'
+      preLoaderRoute: typeof ApiE2eDeleteUserEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -460,6 +480,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MagicLinkRoute: MagicLinkRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiE2eDeleteUserEmailRoute: ApiE2eDeleteUserEmailRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
