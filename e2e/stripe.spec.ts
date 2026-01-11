@@ -141,6 +141,7 @@ class StripePom {
   }
 
   async navigateToPricing() {
+    await this.page.getByRole("link", { name: "Home", exact: true }).click();
     await this.page.getByRole("link", { name: "Pricing" }).click();
   }
 

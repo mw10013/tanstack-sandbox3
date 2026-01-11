@@ -9,6 +9,7 @@ import * as z from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { useIsMounted } from "@/hooks/use-is-mounted";
 
 export const Route = createFileRoute("/_mkt/pricing")({
   loader: async () => {
@@ -104,6 +105,7 @@ function RouteComponent() {
   const { plans } = Route.useLoaderData();
   const upgradeSubscriptionFn = useServerFn(upgradeSubscriptionServerFn);
   const [isAnnual, setIsAnnual] = React.useState(false);
+  const isMounted = useIsMounted();
 
   const upgradeSubscriptionMutation = useMutation({
     mutationFn: (intent: string) =>
@@ -218,7 +220,7 @@ function RouteComponent() {
                     upgradeSubscriptionMutation.reset();
                     upgradeSubscriptionMutation.mutate(lookupKey);
                   }}
-                  disabled={upgradeSubscriptionMutation.isPending}
+                  disabled={!isMounted || upgradeSubscriptionMutation.isPending}
                   className="mt-6 w-full rounded-full! text-base! font-semibold"
                   data-testid={plan.name}
                 >
