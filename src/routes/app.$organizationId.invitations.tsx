@@ -35,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useIsMounted } from "@/hooks/use-is-mounted";
 import * as Domain from "@/lib/domain";
 
 export const Route = createFileRoute("/app/$organizationId/invitations")({
@@ -165,6 +166,7 @@ const invite = createServerFn({ method: "POST" })
 
 function InviteForm({ organizationId }: { organizationId: string }) {
   const router = useRouter();
+  const isMounted = useIsMounted();
   const inviteServerFn = useServerFn(invite);
   const inviteMutation = useMutation({
     mutationFn: (data: z.input<typeof inviteSchema>) =>
@@ -274,10 +276,12 @@ function InviteForm({ organizationId }: { organizationId: string }) {
               children={(canSubmit) => (
                 <Button
                   type="submit"
-                  disabled={!canSubmit || inviteMutation.isPending}
+                  disabled={
+                    !canSubmit || !isMounted || inviteMutation.isPending
+                  }
                   className="self-end"
                 >
-                  {inviteMutation.isPending ? "..." : "Invite"}
+                  Invite
                 </Button>
               )}
             />
@@ -306,6 +310,7 @@ function InvitationItem({
   canManageInvitations: boolean;
 }) {
   const router = useRouter();
+  const isMounted = useIsMounted();
   const cancelInvitationServerFn = useServerFn(cancelInvitation);
   const cancelInvitationMutation = useMutation({
     mutationFn: () =>
@@ -345,7 +350,7 @@ function InvitationItem({
             variant="outline"
             size="sm"
             aria-label={`Cancel invitation for ${invitation.email}`}
-            disabled={cancelInvitationMutation.isPending}
+            disabled={!isMounted || cancelInvitationMutation.isPending}
             onClick={() => {
               cancelInvitationMutation.mutate();
             }}
