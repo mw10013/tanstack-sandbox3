@@ -1,7 +1,12 @@
 import * as React from "react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  redirect,
+  useHydrated,
+  useRouter,
+} from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import {
@@ -368,6 +373,7 @@ function BanDialog({
   onOpenChange: (isOpen: boolean) => void;
 }) {
   const router = useRouter();
+  const isHydrated = useHydrated();
   const banUserServerFn = useServerFn(banUser);
   const banUserMutation = useMutation({
     mutationFn: async (data: z.input<typeof banUserSchema>) =>
@@ -446,6 +452,7 @@ function BanDialog({
                       }}
                       autoFocus
                       aria-invalid={isInvalid}
+                      disabled={!isHydrated}
                     />
                     {isInvalid && (
                       <FieldError errors={field.state.meta.errors} />
@@ -471,7 +478,9 @@ function BanDialog({
               <Button
                 type="submit"
                 form="ban-form"
-                disabled={!canSubmit || banUserMutation.isPending}
+                disabled={
+                  !isHydrated || !canSubmit || banUserMutation.isPending
+                }
               >
                 {banUserMutation.isPending ? "..." : "Ban"}
               </Button>

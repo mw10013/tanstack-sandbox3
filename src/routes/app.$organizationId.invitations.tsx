@@ -238,6 +238,7 @@ function InviteForm({ organizationId }: { organizationId: string }) {
                       }}
                       placeholder="user1@example.com, user2@example.com"
                       aria-invalid={isInvalid}
+                      disabled={!isHydrated}
                     />
                     {isInvalid && (
                       <FieldError errors={field.state.meta.errors} />
@@ -258,6 +259,7 @@ function InviteForm({ organizationId }: { organizationId: string }) {
                       onValueChange={(value) => {
                         if (value) field.handleChange(value);
                       }}
+                      disabled={!isHydrated}
                     >
                       <SelectTrigger className="capitalize">
                         <SelectValue />

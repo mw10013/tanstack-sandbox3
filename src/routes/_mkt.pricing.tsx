@@ -180,6 +180,7 @@ function RouteComponent() {
             onCheckedChange={setIsAnnual}
             aria-label="Annual pricing"
             className="scale-150"
+            disabled={!isHydrated}
           />
           <span className="text-sm font-medium">Annual</span>
         </div>
