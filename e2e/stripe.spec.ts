@@ -132,7 +132,7 @@ class StripePom {
   }
 
   async login({ email }: { email: string }) {
-    await this.page.goto("/login", { waitUntil: "networkidle" });
+    await this.page.goto("/login");
     await this.page.getByRole("textbox", { name: "Email" }).fill(email);
     await this.page.getByRole("button", { name: "Send magic link" }).click();
     await this.page.getByRole("link", { name: /magic-link/ }).waitFor();

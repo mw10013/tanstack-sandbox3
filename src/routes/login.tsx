@@ -21,6 +21,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { useIsMounted } from "@/hooks/use-is-mounted";
 
 export const Route = createFileRoute("/login")({
   component: RouteComponent,
@@ -52,6 +53,7 @@ export const login = createServerFn({
   });
 
 function RouteComponent() {
+  const isMounted = useIsMounted();
   const loginServerFn = useServerFn(login);
   const loginMutation = useMutation({
     mutationFn: (data: z.input<typeof loginSchema>) => loginServerFn({ data }),
@@ -137,6 +139,7 @@ function RouteComponent() {
                         }}
                         placeholder="m@example.com"
                         aria-invalid={isInvalid}
+                        disabled={!isMounted}
                       />
                       {isInvalid && (
                         <FieldError errors={field.state.meta.errors} />
@@ -150,10 +153,12 @@ function RouteComponent() {
                   <Button
                     type="submit"
                     form="login-form"
-                    disabled={!canSubmit || loginMutation.isPending}
+                    disabled={
+                      !isMounted || !canSubmit || loginMutation.isPending
+                    }
                     className="w-full"
                   >
-                    {loginMutation.isPending ? "..." : "Send magic link"}
+                    Send magic link
                   </Button>
                 )}
               </form.Subscribe>
