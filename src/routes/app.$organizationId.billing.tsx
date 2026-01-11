@@ -1,5 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  useHydrated,
+  useRouter,
+} from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { AlertCircle } from "lucide-react";
@@ -12,7 +17,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useIsMounted } from "@/hooks/use-is-mounted";
 
 export const Route = createFileRoute("/app/$organizationId/billing")({
   loader: ({ params: data }) => getLoaderData({ data }),
@@ -78,7 +82,7 @@ function SubscriptionCard({
   organizationId: string;
 }) {
   const router = useRouter();
-  const isMounted = useIsMounted();
+  const isHydrated = useHydrated();
   const manageBillingServerFn = useServerFn(manageBilling);
   const cancelSubscriptionServerFn = useServerFn(cancelSubscription);
   const restoreSubscriptionServerFn = useServerFn(restoreSubscription);
@@ -159,7 +163,7 @@ function SubscriptionCard({
           <Button
             type="button"
             variant="outline"
-            disabled={!isMounted || pending}
+            disabled={!isHydrated || pending}
             onClick={() => {
               manageBillingMutation.mutate();
             }}
@@ -170,7 +174,7 @@ function SubscriptionCard({
             <Button
               type="button"
               variant="default"
-              disabled={!isMounted || pending}
+              disabled={!isHydrated || pending}
               onClick={() => {
                 restoreSubscriptionMutation.mutate();
               }}
@@ -181,7 +185,7 @@ function SubscriptionCard({
             <Button
               type="button"
               variant="destructive"
-              disabled={!isMounted || pending}
+              disabled={!isHydrated || pending}
               onClick={() => {
                 cancelSubscriptionMutation.mutate();
               }}

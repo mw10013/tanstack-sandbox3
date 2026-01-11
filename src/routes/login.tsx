@@ -1,6 +1,6 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useHydrated } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { AlertCircle } from "lucide-react";
@@ -21,7 +21,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useIsMounted } from "@/hooks/use-is-mounted";
 
 export const Route = createFileRoute("/login")({
   component: RouteComponent,
@@ -53,7 +52,7 @@ export const login = createServerFn({
   });
 
 function RouteComponent() {
-  const isMounted = useIsMounted();
+  const isHydrated = useHydrated();
   const loginServerFn = useServerFn(login);
   const loginMutation = useMutation({
     mutationFn: (data: z.input<typeof loginSchema>) => loginServerFn({ data }),
@@ -139,7 +138,7 @@ function RouteComponent() {
                         }}
                         placeholder="m@example.com"
                         aria-invalid={isInvalid}
-                        disabled={!isMounted}
+                        disabled={!isHydrated}
                       />
                       {isInvalid && (
                         <FieldError errors={field.state.meta.errors} />
@@ -154,7 +153,7 @@ function RouteComponent() {
                     type="submit"
                     form="login-form"
                     disabled={
-                      !isMounted || !canSubmit || loginMutation.isPending
+                      !isHydrated || !canSubmit || loginMutation.isPending
                     }
                     className="w-full"
                   >

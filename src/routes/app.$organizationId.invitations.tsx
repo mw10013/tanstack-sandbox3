@@ -1,6 +1,10 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  useHydrated,
+  useRouter,
+} from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { AlertCircle } from "lucide-react";
@@ -35,7 +39,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useIsMounted } from "@/hooks/use-is-mounted";
 import * as Domain from "@/lib/domain";
 
 export const Route = createFileRoute("/app/$organizationId/invitations")({
@@ -166,7 +169,7 @@ const invite = createServerFn({ method: "POST" })
 
 function InviteForm({ organizationId }: { organizationId: string }) {
   const router = useRouter();
-  const isMounted = useIsMounted();
+  const isHydrated = useHydrated();
   const inviteServerFn = useServerFn(invite);
   const inviteMutation = useMutation({
     mutationFn: (data: z.input<typeof inviteSchema>) =>
@@ -277,7 +280,7 @@ function InviteForm({ organizationId }: { organizationId: string }) {
                 <Button
                   type="submit"
                   disabled={
-                    !canSubmit || !isMounted || inviteMutation.isPending
+                    !canSubmit || !isHydrated || inviteMutation.isPending
                   }
                   className="self-end"
                 >
@@ -310,7 +313,7 @@ function InvitationItem({
   canManageInvitations: boolean;
 }) {
   const router = useRouter();
-  const isMounted = useIsMounted();
+  const isHydrated = useHydrated();
   const cancelInvitationServerFn = useServerFn(cancelInvitation);
   const cancelInvitationMutation = useMutation({
     mutationFn: () =>
@@ -350,7 +353,7 @@ function InvitationItem({
             variant="outline"
             size="sm"
             aria-label={`Cancel invitation for ${invitation.email}`}
-            disabled={!isMounted || cancelInvitationMutation.isPending}
+            disabled={!isHydrated || cancelInvitationMutation.isPending}
             onClick={() => {
               cancelInvitationMutation.mutate();
             }}

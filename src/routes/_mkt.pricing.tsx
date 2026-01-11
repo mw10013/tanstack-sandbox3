@@ -1,7 +1,12 @@
 import * as React from "react";
 import { invariant } from "@epic-web/invariant";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  notFound,
+  redirect,
+  useHydrated,
+} from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { AlertCircle } from "lucide-react";
@@ -9,7 +14,6 @@ import * as z from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { useIsMounted } from "@/hooks/use-is-mounted";
 
 export const Route = createFileRoute("/_mkt/pricing")({
   loader: async () => {
@@ -105,7 +109,7 @@ function RouteComponent() {
   const { plans } = Route.useLoaderData();
   const upgradeSubscriptionFn = useServerFn(upgradeSubscriptionServerFn);
   const [isAnnual, setIsAnnual] = React.useState(false);
-  const isMounted = useIsMounted();
+  const isHydrated = useHydrated();
 
   const upgradeSubscriptionMutation = useMutation({
     mutationFn: (intent: string) =>
@@ -220,7 +224,9 @@ function RouteComponent() {
                     upgradeSubscriptionMutation.reset();
                     upgradeSubscriptionMutation.mutate(lookupKey);
                   }}
-                  disabled={!isMounted || upgradeSubscriptionMutation.isPending}
+                  disabled={
+                    !isHydrated || upgradeSubscriptionMutation.isPending
+                  }
                   className="mt-6 w-full rounded-full! text-base! font-semibold"
                   data-testid={plan.name}
                 >
