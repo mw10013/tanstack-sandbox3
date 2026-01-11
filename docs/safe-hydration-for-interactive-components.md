@@ -1,20 +1,18 @@
-Here is the updated Markdown document, focusing on the implementation within a **TanStack Form** field context.
-
-***
-
 # Fixing Playwright Race Conditions: Safe Hydration with `useHydrated`
 
 ## The Issue: The Hydration Gap
 
-In Server-Side Rendered (SSR) applications (like TanStack Start), the server sends HTML that includes your form fields. These inputs appear visible to the user (and Playwright) immediately.
+In Server-Side Rendered (SSR) applications (like TanStack Start), the server sends HTML that includes your interactive components (inputs, buttons, etc.). These elements appear visible to the user (and Playwright) immediately.
 
-However, until the JavaScript bundle downloads and React "hydrates" the page, the event handlers managed by TanStack Form (like `handleChange`, `handleBlur`, and `handleSubmit`) are **not attached** to the DOM elements.
+However, until the JavaScript bundle downloads and React "hydrates" the page, the event handlers (like `onClick`, `handleChange`, `handleBlur`, and `handleSubmit`) are **not attached** to the DOM elements.
 
-If Playwright types into an input or clicks submit during this gap:
-1.  **Input Loss:** Keystrokes may be lost when React re-renders during hydration.
-2.  **Native Submission:** Hitting "Enter" or clicking "Submit" triggers a native browser form POST (reloading the page) instead of the intended TanStack Form submission handler.
+If Playwright interacts during this gap:
 
-## The Solution: Hydration Locking in Form Fields
+- **Form Inputs:** Keystrokes may be lost when React re-renders during hydration.
+- **Form Submissions:** Hitting "Enter" or clicking "Submit" triggers a native browser form POST (reloading the page) instead of the intended handler.
+- **Other Interactive Elements:** Clicks or interactions with buttons, links, or other components may be ignored or behave unexpectedly until handlers are attached.
+
+## The Solution: Hydration Locking for Interactive Components
 
 We use the `useHydrated` hook to force the `disabled` state on form inputs until the application is interactive. This ensures that users (and tests) cannot interact with the form until TanStack Form is fully in control.
 
@@ -23,8 +21,8 @@ We use the `useHydrated` hook to force the `disabled` state on form inputs until
 Call `useHydrated` in your component and pass the state into your `form.Field` render prop.
 
 ```tsx
-import { useHydrated } from '@tanstack/react-router';
-import { useForm } from '@tanstack/react-form';
+import { useForm } from "@tanstack/react-form";
+import { useHydrated } from "@tanstack/react-router";
 
 export function LoginForm() {
   // 1. Get hydration state
@@ -56,7 +54,7 @@ export function LoginForm() {
               value={field.state.value}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
-              disabled={!isHydrated} 
+              disabled={!isHydrated}
             />
           </>
         )}
@@ -64,8 +62,8 @@ export function LoginForm() {
 
       <form.Subscribe selector={(state) => state.canSubmit}>
         {(canSubmit) => (
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             // 3. Lock the submit button too
             disabled={!isHydrated || !canSubmit}
           >
@@ -78,12 +76,30 @@ export function LoginForm() {
 }
 ```
 
-### Why checking `field` properties isn't enough
+### Hydration Locking for Non-Form Interactive Components
 
-You might be tempted to check if `field.handleChange` exists to determine if the form is ready. **This does not work.**
+For buttons or other interactive elements outside forms, the same hydration gap applies. Use `useHydrated` to disable them until the app is interactive:
 
-*   **Server Execution:** When TanStack Start runs on the server, `useForm` creates a real form instance. `field.handleChange` is a defined function in the server's memory.
-*   **The Trap:** If you used `disabled={!field.handleChange}`, the input would render as **enabled** in the HTML sent from the server.
-*   **The Result:** The race condition would persist. The input would be clickable before the client-side JavaScript has actually attached the listener to the DOM.
+```tsx
+import { useHydrated } from "@tanstack/react-router";
 
-By using `!isHydrated`, we explicitly synchronize the UI state with the React lifecycle, guaranteeing that the form is disabled until the moment `useEffect` runs and the application is safe to use.
+export function MyComponent() {
+  const isHydrated = useHydrated();
+
+  return (
+    <Button onClick={() => console.log("Clicked!")} disabled={!isHydrated}>
+      Click Me
+    </Button>
+  );
+}
+```
+
+### Why checking handler existence isn't enough
+
+You might be tempted to check if event handlers exist to determine if the component is ready. **This does not work for SSR.**
+
+- **Server Execution:** On the server, handlers may be defined in memory but not yet attached to the DOM.
+- **The Trap:** Elements could render as enabled in server HTML, allowing premature interactions.
+- **The Result:** Race conditions persist until client-side JavaScript attaches listeners.
+
+By using `!isHydrated`, we synchronize UI state with the React lifecycle, ensuring components are disabled until fully interactive.
