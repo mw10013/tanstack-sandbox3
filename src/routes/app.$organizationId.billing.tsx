@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useIsMounted } from "@/hooks/use-is-mounted";
 
 export const Route = createFileRoute("/app/$organizationId/billing")({
   loader: ({ params: data }) => getLoaderData({ data }),
@@ -77,6 +78,7 @@ function SubscriptionCard({
   organizationId: string;
 }) {
   const router = useRouter();
+  const isMounted = useIsMounted();
   const manageBillingServerFn = useServerFn(manageBilling);
   const cancelSubscriptionServerFn = useServerFn(cancelSubscription);
   const restoreSubscriptionServerFn = useServerFn(restoreSubscription);
@@ -157,7 +159,7 @@ function SubscriptionCard({
           <Button
             type="button"
             variant="outline"
-            disabled={pending}
+            disabled={!isMounted || pending}
             onClick={() => {
               manageBillingMutation.mutate();
             }}
@@ -168,7 +170,7 @@ function SubscriptionCard({
             <Button
               type="button"
               variant="default"
-              disabled={pending}
+              disabled={!isMounted || pending}
               onClick={() => {
                 restoreSubscriptionMutation.mutate();
               }}
@@ -179,7 +181,7 @@ function SubscriptionCard({
             <Button
               type="button"
               variant="destructive"
-              disabled={pending}
+              disabled={!isMounted || pending}
               onClick={() => {
                 cancelSubscriptionMutation.mutate();
               }}
