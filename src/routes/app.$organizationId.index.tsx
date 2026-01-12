@@ -1,6 +1,10 @@
 import { invariant } from "@epic-web/invariant";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  useHydrated,
+  useRouter,
+} from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import * as z from "zod";
@@ -126,6 +130,7 @@ function InvitationItem({
   invitation: (typeof Route)["types"]["loaderData"]["userInvitations"][number];
 }) {
   const router = useRouter();
+  const isHydrated = useHydrated();
   const acceptInvitationServerFn = useServerFn(acceptInvitation);
   const rejectInvitationServerFn = useServerFn(rejectInvitation);
 
@@ -150,7 +155,9 @@ function InvitationItem({
   });
 
   const disabled =
-    acceptInvitationMutation.isPending || rejectInvitationMutation.isPending;
+    !isHydrated ||
+    acceptInvitationMutation.isPending ||
+    rejectInvitationMutation.isPending;
 
   return (
     <Item size="sm" className="gap-4 px-0">
