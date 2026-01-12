@@ -33,8 +33,6 @@ export default defineConfig(
       parserOptions: {
         projectService: {
           allowDefaultProject: ["*.js"],
-          // Explicitly set to project root to avoid conflict with refs/ directory tsconfig
-          tsconfigRootDir: import.meta.dirname,
         },
       },
     },
