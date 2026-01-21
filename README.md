@@ -1,3 +1,6 @@
+
+This repository is archived and has been superseded by https://github.com/mw10013/tanstack-cloudflare-saas
+
 ## Shadcn with Base UI
 
 ```bash
